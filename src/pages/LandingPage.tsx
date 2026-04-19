@@ -57,11 +57,11 @@ const steps = [
   { n: '02', label: 'GAN model verifies image authenticity' },
   { n: '03', label: 'AI analyzes damage in real-time' },
   { n: '04', label: 'Fraud score computed instantly' },
-  { n: '05', label: 'Decision in seconds, garage assigned, payment released' },
+  { n: '05', label: 'Decision in minutes, garage assigned, payment released' },
 ]
 
 const stats = [
-  { value: '< 60s', label: 'Claim processing time' },
+  { value: '< 10 mins', label: 'Claim processing time' },
   { value: '98%', label: 'GAN detection accuracy' },
   { value: '₹0', label: 'Paperwork required' },
   { value: '24/7', label: 'System availability' },

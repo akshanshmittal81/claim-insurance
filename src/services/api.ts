@@ -7,7 +7,6 @@ import axios, {
 } from 'axios'
 import toast from 'react-hot-toast'
 import {
-  MOCK_AUTH_RESPONSE,
   MOCK_USER,
   MOCK_CLAIMS,
   MOCK_CLAIM_RESULT,
@@ -31,28 +30,37 @@ import type {
   ApiResponse,
 } from '@/types'
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+// ─── Webhook URLs ───────────────────────────────────────────────────────────
 
 const N8N_BASE = import.meta.env.VITE_API_BASE_URL || 'https://aniketkansal3007.app.n8n.cloud/webhook'
-const OTP_REQUEST_ID = '7d0d0d60-44cf-4e20-9fe5-19217c319055'   // ✅ fixed
-const OTP_VERIFY_ID  = 'verify-otp'                               // ✅ fixed
+
+const OTP_REQUEST_ID = '7d0d0d60-44cf-4e20-9fe5-19217c319055'
+const OTP_VERIFY_ID  = 'verify-otp'
+
+const WEBHOOKS = {
+  fraud:    `${N8N_BASE}/fraud-check`,
+  decision: `${N8N_BASE}/decision-engine`,
+  garage:   `${N8N_BASE}/garage-assignment`,
+  payment:  `${N8N_BASE}/payment-release`,
+}
 
 const MOCK_DELAY_MS = 600
 
+// ─── MOCK FLAGS ─────────────────────────────────────────────────────────────
 const MOCK = {
   requestOtp:  false,  // ✅ real n8n
   verifyOtp:   false,  // ✅ real n8n
   getUser:     true,
-  claimSubmit: true,
-  claimStatus: true,
-  claimResult: true,
+  claimSubmit: false,  // ✅ real n8n
+  claimStatus: false,  // ✅ real n8n
+  claimResult: false,  // ✅ real n8n
   claimList:   true,
-  garage:      true,
-  payment:     true,
-  blockchain:  true,
+  garage:      false,  // ✅ real n8n
+  payment:     false,  // ✅ real n8n
+  blockchain:  false,  // ✅ real n8n
 }
 
-// ─── Mock helpers ─────────────────────────────────────────────────────────────
+// ─── Mock helpers ────────────────────────────────────────────────────────────
 
 function mockResponse<T>(data: T): ApiResponse<T> {
   return { data, success: true, message: 'OK' }
@@ -62,7 +70,7 @@ function wrapMock<T>(data: T, ms = MOCK_DELAY_MS): Promise<{ data: ApiResponse<T
   return new Promise((r) => setTimeout(() => r({ data: mockResponse(data) }), ms))
 }
 
-// ─── Axios instances ──────────────────────────────────────────────────────────
+// ─── Axios instances ─────────────────────────────────────────────────────────
 
 const createApiClient = (): AxiosInstance => {
   const client = axios.create({
@@ -104,9 +112,12 @@ const createApiClient = (): AxiosInstance => {
 
 export const apiClient = createApiClient()
 
-const n8n = axios.create({ timeout: 30000, headers: { 'Content-Type': 'application/json' } })
+const n8n = axios.create({
+  timeout: 30000,
+  headers: { 'Content-Type': 'application/json' },
+})
 
-// ─── Retry helper ─────────────────────────────────────────────────────────────
+// ─── Retry helper ────────────────────────────────────────────────────────────
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 1000): Promise<T> {
   for (let i = 0; i < retries; i++) {
@@ -120,7 +131,7 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 1000): 
   throw new Error('Max retries exceeded')
 }
 
-// ─── AUTH API ─────────────────────────────────────────────────────────────────
+// ─── AUTH API ────────────────────────────────────────────────────────────────
 
 export const authApi = {
 
@@ -144,11 +155,14 @@ export const authApi = {
     if (MOCK.verifyOtp) {
       if (payload.otp !== '123456') return Promise.reject(new Error('Invalid OTP'))
       return wrapMock<AuthResponse>({
-        ...MOCK_AUTH_RESPONSE,
+        token: 'mock-token-' + Date.now(),
         user: {
-          ...MOCK_AUTH_RESPONSE.user,
-          vehicleNumber: payload.vehicleNumber.toUpperCase(),
+          id: 'user-mock',
+          name: 'ClaimTitans User',
           phone: payload.phone,
+          vehicleNumber: payload.vehicleNumber.toUpperCase(),
+          policyStatus: 'active',
+          policyExpiry: '2027-03-31T00:00:00Z',
         },
       })
     }
@@ -190,10 +204,11 @@ export const authApi = {
   },
 }
 
-// ─── CLAIM API ────────────────────────────────────────────────────────────────
+// ─── CLAIM API ───────────────────────────────────────────────────────────────
 
 export const claimApi = {
 
+  // Step 1: Fraud check webhook
   submit: (payload: ClaimSubmission) => {
     if (MOCK.claimSubmit) {
       const newClaim: Claim = {
@@ -205,29 +220,193 @@ export const claimApi = {
       }
       return wrapMock<Claim>(newClaim, 1200)
     }
-    return withRetry(() => apiClient.post<ApiResponse<Claim>>('/claim', payload))
+
+    return withRetry(() =>
+      n8n.post(WEBHOOKS.fraud, {
+        vehicle_no: payload.vehicleNumber,
+        description: payload.description,
+        image_base64: payload.imageBase64 ?? '',
+        video_base64: payload.videoBase64 ?? '',
+        latitude: payload.latitude ?? null,
+        longitude: payload.longitude ?? null,
+        location_label: payload.locationLabel ?? '',
+        timestamp: payload.timestamp,
+      })
+    ).then((res) => {
+      const d = res.data as {
+        success?: boolean
+        claimId?: string
+        claim_id?: string
+        fraudScore?: number
+        fraud_score?: number
+      }
+
+      const claimId = d.claimId ?? d.claim_id ?? ('clm-' + Date.now().toString(36))
+      const fraudScore = d.fraudScore ?? d.fraud_score ?? 0
+
+      const newClaim: Claim = {
+        id: claimId,
+        vehicleNumber: payload.vehicleNumber,
+        status: fraudScore > 70 ? 'rejected' : 'uploaded',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      return { data: mockResponse<Claim>(newClaim) }
+    })
   },
 
+  // Step 2: Decision Engine — status polling
   getStatus: (claimId: string) => {
     if (MOCK.claimStatus) {
       return wrapMock<ClaimStatusResponse>(getMockClaimStatus(claimId), 400)
     }
-    return apiClient.get<ApiResponse<ClaimStatusResponse>>('/claim/' + claimId + '/status')
+
+    return withRetry(() =>
+      n8n.post(WEBHOOKS.decision, {
+        claim_id: claimId,
+        action: 'get_status',
+      })
+    ).then((res) => {
+      const d = res.data as {
+        status?: string
+        decision?: string
+        claimId?: string
+        claim_id?: string
+        currentStep?: number
+        current_step?: number
+        totalSteps?: number
+        total_steps?: number
+        message?: string
+        updatedAt?: string
+      }
+
+      return {
+        data: mockResponse<ClaimStatusResponse>({
+          claimId: d.claimId ?? d.claim_id ?? claimId,
+          status: (d.status ?? d.decision ?? 'ai_analysis') as ClaimStatusResponse['status'],
+          currentStep: d.currentStep ?? d.current_step ?? 1,
+          totalSteps: d.totalSteps ?? d.total_steps ?? 8,
+          message: d.message ?? 'Processing your claim...',
+          updatedAt: d.updatedAt ?? new Date().toISOString(),
+        })
+      }
+    })
   },
 
+  // Step 3: Decision Engine — final result
   getResult: (claimId: string) => {
-    if (MOCK.claimResult) return wrapMock<ClaimResult>({ ...MOCK_CLAIM_RESULT, claimId })
-    return withRetry(() => apiClient.get<ApiResponse<ClaimResult>>('/claim/' + claimId + '/result'))
+    if (MOCK.claimResult) {
+      return wrapMock<ClaimResult>({ ...MOCK_CLAIM_RESULT, claimId })
+    }
+
+    return withRetry(() =>
+      n8n.post(WEBHOOKS.decision, {
+        claim_id: claimId,
+        action: 'get_result',
+      })
+    ).then((res) => {
+      const d = res.data as {
+        decision?: string
+        status?: string
+        damageSeverity?: string
+        damage_severity?: string
+        fraudScore?: number
+        fraud_score?: number
+        fraudRiskLabel?: string
+        fraud_risk_label?: string
+        estimatedRepairCost?: number
+        estimated_repair_cost?: number
+        detectedDamages?: string[]
+        detected_damages?: string[]
+        aiConfidence?: number
+        ai_confidence?: number
+        explainability?: string[]
+        blockchainTxHash?: string
+        blockchain_tx_hash?: string
+        decidedAt?: string
+        decided_at?: string
+      }
+
+      return {
+        data: mockResponse<ClaimResult>({
+          claimId,
+          decision: (d.decision ?? d.status ?? 'approved') as ClaimResult['decision'],
+          damageSeverity: (d.damageSeverity ?? d.damage_severity ?? 'medium') as ClaimResult['damageSeverity'],
+          fraudScore: d.fraudScore ?? d.fraud_score ?? 0,
+          fraudRiskLabel: (d.fraudRiskLabel ?? d.fraud_risk_label ?? 'low') as ClaimResult['fraudRiskLabel'],
+          estimatedRepairCost: d.estimatedRepairCost ?? d.estimated_repair_cost ?? 0,
+          detectedDamages: d.detectedDamages ?? d.detected_damages ?? [],
+          aiConfidence: d.aiConfidence ?? d.ai_confidence ?? 0,
+          explainability: d.explainability ?? [],
+          blockchainTxHash: d.blockchainTxHash ?? d.blockchain_tx_hash,
+          decidedAt: d.decidedAt ?? d.decided_at ?? new Date().toISOString(),
+        })
+      }
+    })
   },
 
+  // Step 4: Garage assign
   getGarage: (claimId: string) => {
     if (MOCK.garage) return wrapMock<GarageInfo>(MOCK_GARAGE)
-    return withRetry(() => apiClient.get<ApiResponse<GarageInfo>>('/claim/' + claimId + '/garage'))
+
+    return withRetry(() =>
+      n8n.post(WEBHOOKS.garage, {
+        claim_id: claimId,
+      })
+    ).then((res) => {
+      const d = res.data as {
+        name?: string
+        garage_name?: string
+        address?: string
+        phone?: string
+        distance?: string
+        rating?: number
+        assignedAt?: string
+        assigned_at?: string
+      }
+
+      return {
+        data: mockResponse<GarageInfo>({
+          name: d.name ?? d.garage_name ?? 'Assigned Garage',
+          address: d.address ?? 'Address not provided',
+          phone: d.phone ?? '',
+          distance: d.distance ?? 'N/A',
+          rating: d.rating ?? 4.0,
+          assignedAt: d.assignedAt ?? d.assigned_at ?? new Date().toISOString(),
+        })
+      }
+    })
   },
 
+  // Step 5: Payment release
   getPayment: (claimId: string) => {
     if (MOCK.payment) return wrapMock<PaymentInfo>(MOCK_PAYMENT)
-    return withRetry(() => apiClient.get<ApiResponse<PaymentInfo>>('/claim/' + claimId + '/payment'))
+
+    return withRetry(() =>
+      n8n.post(WEBHOOKS.payment, {
+        claim_id: claimId,
+      })
+    ).then((res) => {
+      const d = res.data as {
+        amount?: number
+        currency?: string
+        status?: string
+        transactionId?: string
+        transaction_id?: string
+        releasedAt?: string
+        released_at?: string
+      }
+
+      return {
+        data: mockResponse<PaymentInfo>({
+          amount: d.amount ?? 0,
+          currency: d.currency ?? 'INR',
+          status: (d.status ?? 'released') as PaymentInfo['status'],
+          transactionId: d.transactionId ?? d.transaction_id,
+          releasedAt: d.releasedAt ?? d.released_at,
+        })
+      }
+    })
   },
 
   list: () => {
@@ -236,13 +415,47 @@ export const claimApi = {
   },
 }
 
-// ─── BLOCKCHAIN API ───────────────────────────────────────────────────────────
+// ─── BLOCKCHAIN API ──────────────────────────────────────────────────────────
 
 export const blockchainApi = {
   getRecord: (claimId: string) => {
     if (MOCK.blockchain) return wrapMock<BlockchainRecord>({ ...MOCK_BLOCKCHAIN, claimId })
+
     return withRetry(() =>
-      apiClient.get<ApiResponse<BlockchainRecord>>('/claim/' + claimId + '/blockchain')
-    )
+      n8n.post(WEBHOOKS.payment, {
+        claim_id: claimId,
+        action: 'get_blockchain',
+      })
+    ).then((res) => {
+      const d = res.data as {
+        claimId?: string
+        claim_id?: string
+        txHash?: string
+        tx_hash?: string
+        transactionHash?: string
+        transaction_hash?: string
+        blockNumber?: number
+        block_number?: number
+        network?: string
+        status?: string
+        timestamp?: string
+        explorerUrl?: string
+        explorer_url?: string
+      }
+
+      const txHash = d.txHash ?? d.tx_hash ?? d.transactionHash ?? d.transaction_hash ?? ''
+
+      return {
+        data: mockResponse<BlockchainRecord>({
+          claimId: d.claimId ?? d.claim_id ?? claimId,
+          txHash,
+          blockNumber: d.blockNumber ?? d.block_number ?? 0,
+          network: d.network ?? 'Polygon',
+          status: (d.status ?? 'confirmed') as BlockchainRecord['status'],
+          timestamp: d.timestamp ?? new Date().toISOString(),
+          explorerUrl: d.explorerUrl ?? d.explorer_url ?? `https://polygonscan.com/tx/${txHash}`,
+        })
+      }
+    })
   },
 }

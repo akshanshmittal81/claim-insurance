@@ -55,7 +55,7 @@ export default function ClaimProcessingPage() {
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
                 {isTerminal ? 'Processing complete — redirecting to results'
-                  : 'Your claim is being processed in real-time. Usually under 60 seconds.'}
+                  : 'Your claim is being processed in real-time. Usually under 10 minutes.'}
               </p>
             </div>
           </div>

@@ -13,7 +13,7 @@ import toast from 'react-hot-toast'
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { user, setUser, claimList, setClaimList } = useAppStore()
-  const [loadingUser, setLoadingUser] = useState(!user)
+  const [_loadingUser, setLoadingUser] = useState(!user)
   const [loadingClaims, setLoadingClaims] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 

@@ -135,24 +135,6 @@ export default function AuthPage() {
                     <p className="text-slate-500 text-sm">Enter your vehicle number and phone to receive an OTP.</p>
                   </div>
 
-                  {/* Google */}
-                  <button type="button"
-                    onClick={() => toast('Google sign-in coming soon!', { icon: '🔗' })}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold text-slate-600 mb-6 transition-all hover:shadow-md"
-                    style={{ background: 'white', border: '1.5px solid #E2E8F0' }}>
-                    <Chrome className="w-4 h-4" />
-                    Continue with Google
-                  </button>
-
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-slate-200" />
-                    </div>
-                    <div className="relative flex justify-center">
-                      <span className="px-3 bg-white text-xs text-slate-400">or continue with vehicle details</span>
-                    </div>
-                  </div>
-
                   <form onSubmit={form1.handleSubmit(onStep1Submit)} className="space-y-4">
                     <Input label="Vehicle Number" placeholder="UP15ER2915"
                       prefix={<Car className="w-4 h-4 text-blue-400" />}
@@ -214,14 +196,6 @@ export default function AuthPage() {
                       className="text-sm text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                       {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP'}
                     </button>
-                  </div>
-
-                  <div className="mt-6 p-4 rounded-2xl text-center"
-                    style={{ background: 'linear-gradient(135deg, #EFF6FF, #F0FDF4)', border: '1px solid #BFDBFE' }}>
-                    <p className="text-xs text-slate-500">
-                      <span className="font-semibold text-slate-700">Demo mode:</span> use OTP{' '}
-                      <span className="font-mono font-bold text-blue-600">123456</span>
-                    </p>
                   </div>
                 </motion.div>
               )}
