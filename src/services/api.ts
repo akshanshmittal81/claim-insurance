@@ -34,22 +34,22 @@ import type {
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const N8N_BASE = import.meta.env.VITE_API_BASE_URL || 'https://aniketkansal3007.app.n8n.cloud/webhook'
-const OTP_REQUEST_ID = import.meta.env.VITE_OTP_REQUEST_WEBHOOK || '7d0d0d60-44cf-4e20-9fe5-19217c319055'
-const OTP_VERIFY_ID  = import.meta.env.VITE_OTP_VERIFY_WEBHOOK  || '7d0d0d60-44cf-4e20-9fe5-19217c319055'
+const OTP_REQUEST_ID = '7d0d0d60-44cf-4e20-9fe5-19217c319055'   // ✅ fixed
+const OTP_VERIFY_ID  = 'verify-otp'                               // ✅ fixed
 
 const MOCK_DELAY_MS = 600
 
 const MOCK = {
-  requestOtp:  false,  // ✅ n8n real
-  verifyOtp:   false,  // ✅ n8n real
-  getUser:     true,   // ⏳ mock
-  claimSubmit: true,   // ⏳ mock
-  claimStatus: true,   // ⏳ mock
-  claimResult: true,   // ⏳ mock
-  claimList:   true,   // ⏳ mock
-  garage:      true,   // ⏳ mock
-  payment:     true,   // ⏳ mock
-  blockchain:  true,   // ⏳ mock
+  requestOtp:  false,  // ✅ real n8n
+  verifyOtp:   false,  // ✅ real n8n
+  getUser:     true,
+  claimSubmit: true,
+  claimStatus: true,
+  claimResult: true,
+  claimList:   true,
+  garage:      true,
+  payment:     true,
+  blockchain:  true,
 }
 
 // ─── Mock helpers ─────────────────────────────────────────────────────────────
