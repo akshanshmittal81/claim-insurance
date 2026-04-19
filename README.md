@@ -183,8 +183,8 @@ completed ✅  |  rejected ❌
 |---|---|
 | 🧑‍💻 **Aniket Kansal** | Team Lead + n8n Workflows |
 | 🧑‍💻 **Akshansh Mittal** | Full Stack |
-| 👩‍💻 **Disha** | Frontend + UI/UX |
-| 👩‍💻 **Saumya** | AI Integration + Testing |
+| 👩‍💻 **Disha** | AI Integration + Testing |
+| 👩‍💻 **Saumya** | Frontend + UI/UX |
 
 **MIET Meerut** &nbsp;|&nbsp; Cognizant Technoverse 2026
 
