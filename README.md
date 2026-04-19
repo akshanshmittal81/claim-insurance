@@ -181,8 +181,8 @@ completed ✅  |  rejected ❌
 
 | Member | Role |
 |---|---|
-| 🧑‍💻 **Aniket Kansal** | Team Lead + Full Stack |
-| 🧑‍💻 **Akshansh Mittal** | Backend + n8n Workflows |
+| 🧑‍💻 **Aniket Kansal** | Team Lead + n8n Workflows |
+| 🧑‍💻 **Akshansh Mittal** | Full Stack |
 | 👩‍💻 **Disha** | Frontend + UI/UX |
 | 👩‍💻 **Saumya** | AI Integration + Testing |
 
