@@ -34,20 +34,24 @@ import type {
 
 const N8N_BASE = import.meta.env.VITE_API_BASE_URL || 'https://aniketkansal3007.app.n8n.cloud/webhook'
 
-const OTP_REQUEST_ID = '7d0d0d60-44cf-4e20-9fe5-19217c319055'
-const OTP_VERIFY_ID  = 'verify-otp'
+const OTP_REQUEST_ID = import.meta.env.VITE_OTP_REQUEST_WEBHOOK
+const OTP_VERIFY_ID  = import.meta.env.VITE_OTP_VERIFY_WEBHOOK
 
 const WEBHOOKS = {
-  fraud:    `${N8N_BASE}/fraud-check`,
-  decision: `${N8N_BASE}/decision-engine`,
-  garage:   `${N8N_BASE}/garage-assignment`,
-  payment:  `${N8N_BASE}/payment-release`,
+  fraud:     `${N8N_BASE}/${import.meta.env.VITE_FRAUD_WEBHOOK_ID}`,
+  decision:  `${N8N_BASE}/${import.meta.env.VITE_DECISION_WEBHOOK_ID}`,
+  garage:    `${N8N_BASE}/${import.meta.env.VITE_GARAGE_WEBHOOK_ID}`,
+  payment:   `${N8N_BASE}/${import.meta.env.VITE_PAYMENT_WEBHOOK_ID}`,
+  damage:    `${N8N_BASE}/${import.meta.env.VITE_DAMAGE_WEBHOOK_ID}`,
+  insurance: `${N8N_BASE}/${import.meta.env.VITE_POLICY_WEBHOOK_ID}`,
 }
 
 const MOCK_DELAY_MS = 600
 
 // ─── MOCK FLAGS ─────────────────────────────────────────────────────────────
 const MOCK = {
+  damageAnalysis:  false,  // ? real n8n
+  insuranceVerify: false,  // ? real n8n
   requestOtp:  false,  // ✅ real n8n
   verifyOtp:   false,  // ✅ real n8n
   getUser:     true,
@@ -409,6 +413,84 @@ export const claimApi = {
     })
   },
 
+
+  // Step 6: AI Damage Analysis
+  analyzeDamage: (claimId: string, imageBase64?: string) => {
+    if (MOCK.damageAnalysis) {
+      return wrapMock({
+        claimId,
+        detectedDamages: ['Dent on bumper', 'Broken tail light'],
+        severity: 'medium',
+        confidence: 92,
+        estimatedCost: 45000,
+      })
+    }
+    return withRetry(() =>
+      n8n.post(WEBHOOKS.damage, {
+        claim_id: claimId,
+        image_base64: imageBase64 ?? '',
+      })
+    ).then((res) => {
+      const d = res.data as {
+        detectedDamages?: string[]
+        detected_damages?: string[]
+        severity?: string
+        confidence?: number
+        estimatedCost?: number
+        estimated_cost?: number
+      }
+      return {
+        data: mockResponse({
+          claimId,
+          detectedDamages: d.detectedDamages ?? d.detected_damages ?? [],
+          severity: d.severity ?? 'medium',
+          confidence: d.confidence ?? 0,
+          estimatedCost: d.estimatedCost ?? d.estimated_cost ?? 0,
+        })
+      }
+    })
+  },
+
+  // Step 7: Insurance Policy Verification
+  verifyInsurance: (vehicleNumber: string, claimId: string) => {
+    if (MOCK.insuranceVerify) {
+      return wrapMock({
+        claimId,
+        vehicleNumber,
+        policyStatus: 'active',
+        coverageValid: true,
+        policyExpiry: '2027-03-31T00:00:00Z',
+        insuredAmount: 500000,
+      })
+    }
+    return withRetry(() =>
+      n8n.post(WEBHOOKS.insurance, {
+        claim_id: claimId,
+        vehicle_no: vehicleNumber,
+      })
+    ).then((res) => {
+      const d = res.data as {
+        policyStatus?: string
+        policy_status?: string
+        coverageValid?: boolean
+        coverage_valid?: boolean
+        policyExpiry?: string
+        policy_expiry?: string
+        insuredAmount?: number
+        insured_amount?: number
+      }
+      return {
+        data: mockResponse({
+          claimId,
+          vehicleNumber,
+          policyStatus: d.policyStatus ?? d.policy_status ?? 'active',
+          coverageValid: d.coverageValid ?? d.coverage_valid ?? true,
+          policyExpiry: d.policyExpiry ?? d.policy_expiry ?? '',
+          insuredAmount: d.insuredAmount ?? d.insured_amount ?? 0,
+        })
+      }
+    })
+  },
   list: () => {
     if (MOCK.claimList) return wrapMock<Claim[]>(MOCK_CLAIMS)
     return withRetry(() => apiClient.get<ApiResponse<Claim[]>>('/claim'))
@@ -418,44 +500,35 @@ export const claimApi = {
 // ─── BLOCKCHAIN API ──────────────────────────────────────────────────────────
 
 export const blockchainApi = {
-  getRecord: (claimId: string) => {
+  getRecord: async (claimId: string) => {
     if (MOCK.blockchain) return wrapMock<BlockchainRecord>({ ...MOCK_BLOCKCHAIN, claimId })
 
-    return withRetry(() =>
-      n8n.post(WEBHOOKS.payment, {
-        claim_id: claimId,
-        action: 'get_blockchain',
+    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/payments?claim_id=eq.${claimId}&select=*`,
+      {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+      }
+    )
+    const data = await res.json()
+    const record = data[0] ?? {}
+    const txHash = record.transaction_hash ?? ''
+
+    return {
+      data: mockResponse<BlockchainRecord>({
+        claimId,
+        txHash,
+        blockNumber: record.block_number ?? 0,
+        network: 'Sepolia Testnet',
+        status: txHash ? 'confirmed' : 'pending',
+        timestamp: record.created_at ?? new Date().toISOString(),
+        explorerUrl: `https://sepolia.etherscan.io/tx/${txHash}`,
       })
-    ).then((res) => {
-      const d = res.data as {
-        claimId?: string
-        claim_id?: string
-        txHash?: string
-        tx_hash?: string
-        transactionHash?: string
-        transaction_hash?: string
-        blockNumber?: number
-        block_number?: number
-        network?: string
-        status?: string
-        timestamp?: string
-        explorerUrl?: string
-        explorer_url?: string
-      }
-
-      const txHash = d.txHash ?? d.tx_hash ?? d.transactionHash ?? d.transaction_hash ?? ''
-
-      return {
-        data: mockResponse<BlockchainRecord>({
-          claimId: d.claimId ?? d.claim_id ?? claimId,
-          txHash,
-          blockNumber: d.blockNumber ?? d.block_number ?? 0,
-          network: d.network ?? 'Polygon',
-          status: (d.status ?? 'confirmed') as BlockchainRecord['status'],
-          timestamp: d.timestamp ?? new Date().toISOString(),
-          explorerUrl: d.explorerUrl ?? d.explorer_url ?? `https://polygonscan.com/tx/${txHash}`,
-        })
-      }
-    })
+    }
   },
 }

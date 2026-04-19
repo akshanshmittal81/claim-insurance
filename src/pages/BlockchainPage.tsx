@@ -103,12 +103,12 @@ export default function BlockchainPage() {
 
             <div className="h-px" style={{ background: '#EFF6FF' }} />
 
-            <a href={record.explorerUrl} target="_blank" rel="noopener noreferrer"
+            {record.txHash && <a href={record.explorerUrl} target="_blank" rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm transition-all hover:scale-[1.02]"
               style={{ background: 'linear-gradient(135deg, #7C3AED, #8B5CF6)', color: 'white', boxShadow: '0 4px 16px rgba(124,58,237,0.25)' }}>
               <ExternalLink className="w-4 h-4" />
               View on Block Explorer
-            </a>
+            </a>}
           </motion.div>
         ) : (
           <div className="rounded-3xl p-16 text-center" style={{ background: 'rgba(255,255,255,0.7)', border: '2px dashed #BFDBFE' }}>
