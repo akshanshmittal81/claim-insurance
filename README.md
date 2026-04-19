@@ -94,51 +94,6 @@ claim-insurance/
 └── vite.config.ts
 ```
 
----
-
-## ⚙️ Setup & Installation
-
-### 1️⃣ Clone the repo
-
-```bash
-git clone https://github.com/akshanshmittal81/claim-insurance.git
-cd claim-insurance
-```
-
-### 2️⃣ Install dependencies
-
-```bash
-npm install
-```
-
-### 3️⃣ Configure environment
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env`:
-
-```env
-VITE_API_BASE_URL=https://your-n8n-instance.com/webhook
-```
-
-### 4️⃣ Run development server
-
-```bash
-npm run dev
-```
-
-> App runs at **http://localhost:3000** 🚀
-
-### 5️⃣ Build for production
-
-```bash
-npm run build
-npm run preview
-```
-
----
 
 ## 🔌 API Endpoints (n8n Webhooks)
 
