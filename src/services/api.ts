@@ -54,11 +54,11 @@ const MOCK = {
   insuranceVerify: false,  // ? real n8n
   requestOtp:  false,  // ✅ real n8n
   verifyOtp:   false,  // ✅ real n8n
-  getUser:     true,
+  getUser:     false,
   claimSubmit: false,  // ✅ real n8n
   claimStatus: false,  // ✅ real n8n
   claimResult: false,  // ✅ real n8n
-  claimList:   true,
+  claimList:   false,
   garage:      false,  // ✅ real n8n
   payment:     false,  // ✅ real n8n
   blockchain:  false,  // ✅ real n8n

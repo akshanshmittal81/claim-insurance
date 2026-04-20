@@ -26,18 +26,53 @@ export function useCamera(): UseCameraReturn {
 
   const startCamera = useCallback(async () => {
     try {
+      // Pehle purani stream band karo agar chal rahi ho
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop())
+        streamRef.current = null
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
         audio: false,
       })
+
       streamRef.current = stream
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        await videoRef.current.play()
+
+        // Play ka wait karo properly
+        await new Promise<void>((resolve, reject) => {
+          if (!videoRef.current) return reject()
+          videoRef.current.onloadedmetadata = async () => {
+            try {
+              await videoRef.current!.play()
+              resolve()
+            } catch (e) {
+              reject(e)
+            }
+          }
+        })
       }
+
       setIsStreaming(true)
-    } catch {
-      toast.error('Camera access denied. Please allow camera permissions.')
+    } catch (err: any) {
+      console.error('Camera error:', err)
+      if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+        toast.error('Camera access denied. Please allow camera permissions.')
+      } else if (err?.name === 'NotFoundError') {
+        toast.error('No camera found on this device.')
+      } else if (err?.name === 'NotReadableError') {
+        toast.error('Camera is already in use by another app.')
+      } else {
+        toast.error('Could not start camera. Please try again.')
+      }
+      setIsStreaming(false)
     }
   }, [])
 
@@ -46,6 +81,7 @@ export function useCamera(): UseCameraReturn {
     streamRef.current = null
     if (videoRef.current) {
       videoRef.current.srcObject = null
+      videoRef.current.load()
     }
     setIsStreaming(false)
     setIsRecording(false)
@@ -53,12 +89,13 @@ export function useCamera(): UseCameraReturn {
 
   const capturePhoto = useCallback((): string | null => {
     if (!videoRef.current) return null
+    const video = videoRef.current
     const canvas = document.createElement('canvas')
-    canvas.width = videoRef.current.videoWidth
-    canvas.height = videoRef.current.videoHeight
+    canvas.width = video.videoWidth || 1280
+    canvas.height = video.videoHeight || 720
     const ctx = canvas.getContext('2d')
     if (!ctx) return null
-    ctx.drawImage(videoRef.current, 0, 0)
+    ctx.drawImage(video, 0, 0)
     const dataUrl = canvas.toDataURL('image/jpeg', 0.9)
     setCapturedImage(dataUrl)
     return dataUrl
@@ -66,11 +103,27 @@ export function useCamera(): UseCameraReturn {
 
   const startRecording = useCallback(() => {
     if (!streamRef.current) return
+
     chunksRef.current = []
-    const recorder = new MediaRecorder(streamRef.current, { mimeType: 'video/webm;codecs=vp9' })
+
+    // Browser support ke hisaab se mimeType choose karo
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+      ? 'video/webm;codecs=vp9'
+      : MediaRecorder.isTypeSupported('video/webm')
+      ? 'video/webm'
+      : MediaRecorder.isTypeSupported('video/mp4')
+      ? 'video/mp4'
+      : ''
+
+    const recorder = new MediaRecorder(
+      streamRef.current,
+      mimeType ? { mimeType } : undefined
+    )
+
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunksRef.current.push(e.data)
     }
+
     recorder.start(100)
     mediaRecorderRef.current = recorder
     setIsRecording(true)
@@ -78,10 +131,8 @@ export function useCamera(): UseCameraReturn {
 
   const stopRecording = useCallback((): Promise<string | null> => {
     return new Promise((resolve) => {
-      if (!mediaRecorderRef.current) {
-        resolve(null)
-        return
-      }
+      if (!mediaRecorderRef.current) { resolve(null); return }
+
       mediaRecorderRef.current.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'video/webm' })
         const reader = new FileReader()
@@ -91,6 +142,7 @@ export function useCamera(): UseCameraReturn {
         }
         reader.readAsDataURL(blob)
       }
+
       mediaRecorderRef.current.stop()
       setIsRecording(false)
     })

@@ -14,18 +14,26 @@ import toast from 'react-hot-toast'
 export default function ClaimResultPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { claimResult, setClaimResult } = useAppStore()
-  const [result, setResult] = useState<ClaimResult | null>(claimResult)
-  const [loading, setLoading] = useState(!claimResult)
+  const { setClaimResult } = useAppStore()
+  const [result, setResult] = useState<ClaimResult | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const fetchResult = async () => {
-    if (!id) return; setLoading(true)
-    try { const res = await claimApi.getResult(id); setResult(res.data.data); setClaimResult(res.data.data) }
-    catch { toast.error('Failed to load result') }
-    finally { setLoading(false) }
+    if (!id) return
+    setLoading(true)
+    try {
+      const res = await claimApi.getResult(id)
+      setResult(res.data.data)
+      setClaimResult(res.data.data)
+    } catch {
+      toast.error('Failed to load result')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  useEffect(() => { if (!claimResult && id) fetchResult() }, [id])
+  // Hamesha fresh fetch — store pe depend mat karo
+  useEffect(() => { fetchResult() }, [id])
 
   if (loading) return (
     <AppLayout>
@@ -195,6 +203,7 @@ export default function ClaimResultPage() {
           <Button variant="secondary" onClick={() => navigate(`/claim/${id}/blockchain`)} icon={<ExternalLink className="w-4 h-4" />} className="flex-1">Blockchain Record</Button>
           <Button variant="primary" onClick={() => navigate('/dashboard')} icon={<ChevronRight className="w-4 h-4" />} iconPosition="right" className="flex-1">Back to Dashboard</Button>
         </motion.div>
+
       </div>
     </AppLayout>
   )

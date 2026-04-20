@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 
 // Pages
@@ -9,6 +9,7 @@ import ClaimCapturePage from '@/pages/ClaimCapturePage'
 import ClaimProcessingPage from '@/pages/ClaimProcessingPage'
 import ClaimResultPage from '@/pages/ClaimResultPage'
 import BlockchainPage from '@/pages/BlockchainPage'
+import MyClaimsPage from '@/pages/MyClaimsPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
 export default function App() {
@@ -25,6 +26,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/claims"
+          element={
+            <ProtectedRoute>
+              <MyClaimsPage />
             </ProtectedRoute>
           }
         />
@@ -60,9 +69,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* Redirects */}
-        <Route path="/claims" element={<Navigate to="/dashboard" replace />} />
 
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />

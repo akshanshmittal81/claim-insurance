@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { Plus, ListChecks, Car, FileText, Clock, CheckCircle2, XCircle, ChevronRight, RefreshCw } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Plus, ListChecks, FileText, Clock, CheckCircle2, XCircle, ChevronRight, RefreshCw } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/Button'
 import { useAppStore } from '@/store'
@@ -10,12 +10,70 @@ import { formatDate, claimIdToDisplay } from '@/utils'
 import type { Claim } from '@/types'
 import toast from 'react-hot-toast'
 
+const STEPS = [
+  { key: 'uploaded',    label: 'Submitted' },
+  { key: 'processing',  label: 'Photos Verified' },
+  { key: 'ai_analysis', label: 'AI Analysis' },
+  { key: 'garage',      label: 'Garage Assigned' },
+  { key: 'completed',   label: 'Payment Released' },
+]
+
+function getStepIndex(status: string) {
+  if (status === 'completed' || status === 'rejected') return STEPS.length
+  const idx = STEPS.findIndex(s => s.key === status)
+  return idx === -1 ? 0 : idx
+}
+
+function ClaimTracker({ claim }: { claim: Claim }) {
+  const activeIdx = getStepIndex(claim.status)
+  return (
+    <div className="flex gap-4 pt-3 pb-1 px-1">
+      <div className="flex flex-col items-center" style={{ paddingTop: 2 }}>
+        {STEPS.map((_, i) => (
+          <div key={i}>
+            <div style={{
+              width: 10, height: 10, borderRadius: '50%',
+              background: i < activeIdx ? '#1D9E75' : i === activeIdx ? '#378ADD' : '#D3D1C7',
+              boxShadow: i === activeIdx ? '0 0 0 3px #B5D4F4' : 'none',
+            }} />
+            {i < STEPS.length - 1 && (
+              <div style={{ width: 2, height: 28, margin: '3px auto', background: i < activeIdx ? '#1D9E75' : '#D3D1C7' }} />
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="flex-1 flex flex-col gap-4">
+        {STEPS.map((step, i) => {
+          const done = i < activeIdx
+          const active = i === activeIdx
+          return (
+            <div key={step.key} className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-semibold" style={{ color: done || active ? '#0F172A' : '#94A3B8' }}>{step.label}</div>
+                <div className="text-xs mt-0.5" style={{ color: '#94A3B8' }}>{done ? 'Completed' : active ? 'In progress...' : 'Pending'}</div>
+              </div>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                style={{
+                  background: done ? '#E1F5EE' : active ? '#E6F1FB' : '#F1EFE8',
+                  color: done ? '#0F6E56' : active ? '#185FA5' : '#5F5E5A',
+                }}>
+                {done ? 'done' : active ? 'active' : 'pending'}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { user, setUser, claimList, setClaimList } = useAppStore()
-  const [_loadingUser, setLoadingUser] = useState(!user)
+  const [loadingUser, setLoadingUser] = useState(!user)
   const [loadingClaims, setLoadingClaims] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const fetchUser = async () => {
     try { const res = await authApi.getUser(); setUser(res.data.data) }
@@ -44,94 +102,113 @@ export default function DashboardPage() {
   }
 
   const statusBadge = (status: string) => {
-    if (status === 'completed') return { bg: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)', border: '#6EE7B7', color: '#065F46' }
-    if (status === 'rejected') return { bg: '#FEE2E2', border: '#FCA5A5', color: '#991B1B' }
-    return { bg: '#FEF3C7', border: '#FCD34D', color: '#92400E' }
+    if (status === 'completed') return { bg: '#E1F5EE', border: '#9FE1CB', color: '#0F6E56' }
+    if (status === 'rejected') return { bg: '#FCEBEB', border: '#F09595', color: '#A32D2D' }
+    return { bg: '#FAEEDA', border: '#FAC775', color: '#854F0B' }
   }
+
+  const total = claimList.length
+  const completed = claimList.filter(c => c.status === 'completed').length
+  const inProgress = claimList.filter(c => c.status !== 'completed' && c.status !== 'rejected').length
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        {/* Welcome */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-2xl font-bold text-slate-800 mb-1">
-            Welcome back, {user?.name?.split(' ')[0] ?? 'User'} 👋
-          </h1>
-          <p className="text-slate-500 text-sm">Manage your vehicle insurance claims</p>
-        </motion.div>
+      <div className="space-y-4">
 
-        {/* Vehicle Card */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="rounded-3xl p-6" style={{
-            background: 'linear-gradient(135deg, #1D4ED8, #0EA5E9, #10B981)',
-            boxShadow: '0 8px 32px rgba(37,99,235,0.25)'
-          }}>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
-              <Car className="w-7 h-7 text-white" />
+        {/* User Profile Card */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+          className="rounded-3xl p-5"
+          style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE', boxShadow: '0 4px 24px rgba(59,130,246,0.06)' }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-lg"
+              style={{ background: 'linear-gradient(135deg, #2563EB, #10B981)' }}>
+              {user?.name?.[0] ?? 'U'}
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="font-mono font-bold text-xl text-white">{user?.vehicleNumber}</span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
-                  {user?.policyStatus === 'active' ? 'Policy Active' : 'Policy Expired'}
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-slate-800 text-base">{user?.name ?? 'User'}</div>
+              <div className="text-xs text-slate-500 mt-0.5">+91 {user?.phone}</div>
+            </div>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+              style={{ background: '#E1F5EE', color: '#0F6E56', border: '1px solid #9FE1CB' }}>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              Active
+            </span>
+          </div>
+          <div className="h-px mb-3" style={{ background: '#EFF6FF' }} />
+          <div className="grid grid-cols-2 gap-0">
+            {[
+              { label: 'Vehicle', value: user?.vehicleNumber ?? '—', mono: true },
+              { label: 'Policy', value: user?.policyStatus === 'active' ? 'Active' : 'Expired', green: true },
+              { label: 'Expires', value: user?.policyExpiry ? new Date(user.policyExpiry).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—' },
+              { label: 'Claims', value: `${total} total` },
+            ].map((item, i) => (
+              <div key={i} className="py-2 flex justify-between items-center"
+                style={{
+                  borderRight: i % 2 === 0 ? '1px solid #EFF6FF' : 'none',
+                  borderBottom: i < 2 ? '1px solid #EFF6FF' : 'none',
+                  paddingRight: i % 2 === 0 ? 12 : 0,
+                  paddingLeft: i % 2 === 1 ? 12 : 0,
+                }}>
+                <span className="text-xs text-slate-400">{item.label}</span>
+                <span className={`text-xs font-semibold ${item.mono ? 'font-mono' : ''}`}
+                  style={{ color: item.green ? '#1D9E75' : '#0F172A' }}>
+                  {item.value}
                 </span>
               </div>
-              <p className="text-blue-100 text-sm mt-1">
-                {user?.policyExpiry
-                  ? `Expires: ${new Date(user.policyExpiry).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}`
-                  : 'Policy details unavailable'}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-blue-200 text-xs uppercase tracking-wide">Registered</p>
-              <p className="text-white font-mono font-semibold">{user?.phone}</p>
-            </div>
+            ))}
           </div>
         </motion.div>
 
-        {/* Action Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <motion.button initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-            onClick={() => navigate('/claim/new')}
-            className="rounded-3xl p-6 text-left transition-all duration-300 hover:scale-[1.02] group"
-            style={{ background: 'rgba(255,255,255,0.9)', border: '1.5px solid #BFDBFE', boxShadow: '0 4px 20px rgba(59,130,246,0.08)' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3 shadow-md"
-                  style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)' }}>
-                  <Plus className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="font-bold text-slate-800">New Claim</h3>
-                <p className="text-xs text-slate-500 mt-1">Upload damage photos &amp; submit</p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+        {/* Stats */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          className="grid grid-cols-3 gap-3">
+          {[
+            { label: 'Total', value: total, color: '#0F172A' },
+            { label: 'Completed', value: completed, color: '#1D9E75' },
+            { label: 'In Progress', value: inProgress, color: '#378ADD' },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-2xl p-3 text-center"
+              style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE' }}>
+              <div className="text-xs text-slate-400 mb-1">{stat.label}</div>
+              <div className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
             </div>
+          ))}
+        </motion.div>
+
+        {/* Action Cards */}
+        <div className="grid grid-cols-2 gap-3">
+          <motion.button initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+            onClick={() => navigate('/claim/new')}
+            className="rounded-3xl p-5 text-left transition-all duration-300 hover:scale-[1.02]"
+            style={{ background: 'rgba(255,255,255,0.9)', border: '1.5px solid #BFDBFE', boxShadow: '0 4px 20px rgba(59,130,246,0.08)' }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
+              style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)' }}>
+              <Plus className="w-4 h-4 text-white" />
+            </div>
+            <div className="font-bold text-slate-800 text-sm">New Claim</div>
+            <div className="text-xs text-slate-500 mt-0.5">Upload photos & submit</div>
           </motion.button>
 
-          <motion.button initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            onClick={() => fetchClaims(true)}
-            className="rounded-3xl p-6 text-left transition-all duration-300 hover:scale-[1.02] group"
+          <motion.button initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+            onClick={() => navigate('/claims')}
+            className="rounded-3xl p-5 text-left transition-all duration-300 hover:scale-[1.02]"
             style={{ background: 'rgba(255,255,255,0.9)', border: '1.5px solid #BBF7D0', boxShadow: '0 4px 20px rgba(16,185,129,0.08)' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-3 shadow-md"
-                  style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }}>
-                  <ListChecks className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="font-bold text-slate-800">My Claims</h3>
-                <p className="text-xs text-slate-500 mt-1">View all submitted claims</p>
-              </div>
-              <RefreshCw className={`w-4 h-4 text-slate-300 transition-all ${refreshing ? 'animate-spin text-emerald-500' : 'group-hover:rotate-180'}`} />
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
+              style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }}>
+              <ListChecks className="w-4 h-4 text-white" />
+            </div>
+            <div className="font-bold text-slate-800 text-sm">My Claims</div>
+            <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+              <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin text-emerald-500' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'View all submissions'}
             </div>
           </motion.button>
         </div>
 
         {/* Claims List */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-slate-800 flex items-center gap-2">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-slate-800 flex items-center gap-2 text-sm">
               <FileText className="w-4 h-4 text-blue-500" /> Recent Claims
             </h2>
             {claimList.length > 0 && <span className="text-xs text-slate-400 font-mono">{claimList.length} total</span>}
@@ -139,56 +216,67 @@ export default function DashboardPage() {
 
           {loadingClaims ? (
             <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="rounded-2xl p-4 shimmer-bg h-16" />
-              ))}
+              {[1, 2, 3].map(i => <div key={i} className="rounded-2xl p-4 shimmer-bg h-16" />)}
             </div>
           ) : claimList.length === 0 ? (
-            <div className="rounded-3xl p-16 text-center" style={{
-              background: 'rgba(255,255,255,0.7)',
-              border: '2px dashed #BFDBFE'
-            }}>
+            <div className="rounded-3xl p-16 text-center"
+              style={{ background: 'rgba(255,255,255,0.7)', border: '2px dashed #BFDBFE' }}>
               <FileText className="w-10 h-10 text-blue-200 mx-auto mb-3" />
               <p className="text-slate-600 font-semibold">No claims yet</p>
               <p className="text-xs text-slate-400 mt-1 mb-6">Submit your first claim to get started</p>
-              <Button variant="primary" size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => navigate('/claim/new')}>
-                New Claim
-              </Button>
+              <Button variant="primary" size="sm" icon={<Plus className="w-4 h-4" />}
+                onClick={() => navigate('/claim/new')}>New Claim</Button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="rounded-3xl overflow-hidden"
+              style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE', boxShadow: '0 4px 24px rgba(59,130,246,0.06)' }}>
               {claimList.map((claim, i) => {
                 const badge = statusBadge(claim.status)
+                const isExpanded = expandedId === claim.id
                 return (
-                  <motion.div key={claim.id}
-                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:scale-[1.01] group"
-                    style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE', boxShadow: '0 2px 12px rgba(59,130,246,0.06)' }}
-                    onClick={() => handleTrackClaim(claim)}>
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: claim.status === 'completed' ? 'linear-gradient(135deg, #D1FAE5, #A7F3D0)' : claim.status === 'rejected' ? '#FEE2E2' : '#FEF3C7' }}>
+                  <div key={claim.id} style={{ borderBottom: i < claimList.length - 1 ? '1px solid #EFF6FF' : 'none' }}>
+                    <div className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-blue-50/40 transition-colors"
+                      onClick={() => setExpandedId(isExpanded ? null : claim.id)}>
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: claim.status === 'completed' ? '#E1F5EE' : claim.status === 'rejected' ? '#FCEBEB' : '#FAEEDA' }}>
                         {statusIcon(claim.status)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-mono text-sm font-bold text-slate-700">{claimIdToDisplay(claim.id)}</span>
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
                             style={{ background: badge.bg, border: `1px solid ${badge.border}`, color: badge.color }}>
                             {claim.status.replace(/_/g, ' ')}
                           </span>
                         </div>
                         <p className="text-xs text-slate-400 mt-0.5">{formatDate(claim.createdAt)}</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                      <motion.div animate={{ rotate: isExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}>
+                        <ChevronRight className="w-4 h-4 text-slate-300" />
+                      </motion.div>
                     </div>
-                  </motion.div>
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} style={{ overflow: 'hidden' }}>
+                          <div className="px-4 pb-4" style={{ borderTop: '1px solid #EFF6FF' }}>
+                            <ClaimTracker claim={claim} />
+                            <button onClick={(e) => { e.stopPropagation(); handleTrackClaim(claim) }}
+                              className="mt-3 w-full py-2 rounded-xl text-xs font-semibold transition-all hover:scale-[1.01]"
+                              style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)', color: 'white' }}>
+                              View Full Details →
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 )
               })}
             </div>
           )}
         </motion.div>
+
       </div>
     </AppLayout>
   )
