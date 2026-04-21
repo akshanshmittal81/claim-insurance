@@ -50,18 +50,18 @@ const MOCK_DELAY_MS = 600
 
 // ─── MOCK FLAGS ─────────────────────────────────────────────────────────────
 const MOCK = {
-  damageAnalysis:  false,  // ? real n8n
-  insuranceVerify: false,  // ? real n8n
-  requestOtp:  false,  // ✅ real n8n
-  verifyOtp:   false,  // ✅ real n8n
-  getUser:     false,
-  claimSubmit: false,  // ✅ real n8n
-  claimStatus: false,  // ✅ real n8n
-  claimResult: false,  // ✅ real n8n
-  claimList:   false,
-  garage:      false,  // ✅ real n8n
-  payment:     false,  // ✅ real n8n
-  blockchain:  false,  // ✅ real n8n
+  damageAnalysis:  false,
+  insuranceVerify: false,
+  requestOtp:  false,
+  verifyOtp:   false,
+  getUser:     true,
+  claimSubmit: true,
+  claimStatus: true,
+  claimResult: true,
+  claimList:   true,
+  garage:      true,
+  payment:     true,
+  blockchain:  true,
 }
 
 // ─── Mock helpers ────────────────────────────────────────────────────────────
@@ -100,13 +100,13 @@ const createApiClient = (): AxiosInstance => {
       const status = error.response?.status
       if (status === 401) {
         localStorage.removeItem('ct_token')
-        toast.error('Session expired. Please sign in again.')
+        toast.error('Session expired. Please sign in again.', { id: 'session-expired' }) // ✅ id added
         window.location.href = '/auth'
         return Promise.reject(error)
       }
-      if (status === 429) toast.error('Too many requests. Please wait.')
-      if (status && status >= 500) toast.error('Server error. Please try again.')
-      if (!error.response) toast.error('Network error. Check your connection.')
+      if (status === 429) toast.error('Too many requests. Please wait.', { id: 'rate-limit' }) // ✅ id added
+      if (status && status >= 500) toast.error('Server error. Please try again.', { id: 'server-error' }) // ✅ id added
+      if (!error.response) toast.error('Network error. Check your connection.', { id: 'network-error' }) // ✅ id added
       return Promise.reject(error)
     }
   )
@@ -116,19 +116,39 @@ const createApiClient = (): AxiosInstance => {
 
 export const apiClient = createApiClient()
 
+// ✅ n8n instance — ab interceptor ke saath
 const n8n = axios.create({
   timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 })
 
+// ✅ n8n pe bhi same error interceptor lagaya
+n8n.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const status = error.response?.status
+    if (status === 401) {
+      localStorage.removeItem('ct_token')
+      toast.error('Session expired. Please sign in again.', { id: 'session-expired' })
+      window.location.href = '/auth'
+      return Promise.reject(error)
+    }
+    if (status === 429) toast.error('Too many requests. Please wait.', { id: 'rate-limit' })
+    if (status && status >= 500) toast.error('Server error. Please try again.', { id: 'server-error' })
+    if (!error.response) toast.error('Network error. Check your connection.', { id: 'network-error' }) // ✅ sirf ek toast
+    return Promise.reject(error)
+  }
+)
+
 // ─── Retry helper ────────────────────────────────────────────────────────────
 
+// ✅ suppressToast flag — retry ke dauran interceptor toast fire nahi karega
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 1000): Promise<T> {
   for (let i = 0; i < retries; i++) {
     try {
       return await fn()
     } catch (error) {
-      if (i === retries - 1) throw error
+      if (i === retries - 1) throw error // ✅ sirf last attempt pe throw — ek hi toast
       await new Promise((r) => setTimeout(r, delayMs * (i + 1)))
     }
   }
@@ -162,11 +182,11 @@ export const authApi = {
         token: 'mock-token-' + Date.now(),
         user: {
           id: 'user-mock',
-          name: 'ClaimTitans User',
+          name: 'ClaimTitans user',
           phone: payload.phone,
           vehicleNumber: payload.vehicleNumber.toUpperCase(),
           policyStatus: 'active',
-          policyExpiry: '2027-03-31T00:00:00Z',
+          policyExpiry: '2026-04-30T00:00:00Z',
         },
       })
     }
@@ -187,11 +207,11 @@ export const authApi = {
 
       const user: User = d.user ?? {
         id: 'user-' + Date.now(),
-        name: 'ClaimTitans User',
+        name: 'Claimtitans user',
         phone: payload.phone,
         vehicleNumber: payload.vehicleNumber.toUpperCase(),
         policyStatus: 'active',
-        policyExpiry: '2027-03-31T00:00:00Z',
+        policyExpiry: '2026-04-30T00:00:00Z',
       }
       const token = d.token ?? ('session-' + Date.now())
       return { data: mockResponse<AuthResponse>({ token, user }) }
@@ -212,7 +232,6 @@ export const authApi = {
 
 export const claimApi = {
 
-  // Step 1: Fraud check webhook
   submit: (payload: ClaimSubmission) => {
     if (MOCK.claimSubmit) {
       const newClaim: Claim = {
@@ -259,7 +278,6 @@ export const claimApi = {
     })
   },
 
-  // Step 2: Decision Engine — status polling
   getStatus: (claimId: string) => {
     if (MOCK.claimStatus) {
       return wrapMock<ClaimStatusResponse>(getMockClaimStatus(claimId), 400)
@@ -297,7 +315,6 @@ export const claimApi = {
     })
   },
 
-  // Step 3: Decision Engine — final result
   getResult: (claimId: string) => {
     if (MOCK.claimResult) {
       return wrapMock<ClaimResult>({ ...MOCK_CLAIM_RESULT, claimId })
@@ -349,14 +366,11 @@ export const claimApi = {
     })
   },
 
-  // Step 4: Garage assign
   getGarage: (claimId: string) => {
     if (MOCK.garage) return wrapMock<GarageInfo>(MOCK_GARAGE)
 
     return withRetry(() =>
-      n8n.post(WEBHOOKS.garage, {
-        claim_id: claimId,
-      })
+      n8n.post(WEBHOOKS.garage, { claim_id: claimId })
     ).then((res) => {
       const d = res.data as {
         name?: string
@@ -382,14 +396,11 @@ export const claimApi = {
     })
   },
 
-  // Step 5: Payment release
   getPayment: (claimId: string) => {
     if (MOCK.payment) return wrapMock<PaymentInfo>(MOCK_PAYMENT)
 
     return withRetry(() =>
-      n8n.post(WEBHOOKS.payment, {
-        claim_id: claimId,
-      })
+      n8n.post(WEBHOOKS.payment, { claim_id: claimId })
     ).then((res) => {
       const d = res.data as {
         amount?: number
@@ -413,8 +424,6 @@ export const claimApi = {
     })
   },
 
-
-  // Step 6: AI Damage Analysis
   analyzeDamage: (claimId: string, imageBase64?: string) => {
     if (MOCK.damageAnalysis) {
       return wrapMock({
@@ -451,7 +460,6 @@ export const claimApi = {
     })
   },
 
-  // Step 7: Insurance Policy Verification
   verifyInsurance: (vehicleNumber: string, claimId: string) => {
     if (MOCK.insuranceVerify) {
       return wrapMock({
@@ -491,6 +499,7 @@ export const claimApi = {
       }
     })
   },
+
   list: () => {
     if (MOCK.claimList) return wrapMock<Claim[]>(MOCK_CLAIMS)
     return withRetry(() => apiClient.get<ApiResponse<Claim[]>>('/claim'))

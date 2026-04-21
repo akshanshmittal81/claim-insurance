@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, ListChecks, FileText, Clock, CheckCircle2, XCircle, ChevronRight, RefreshCw } from 'lucide-react'
+import { Plus, ListChecks, FileText, Clock, CheckCircle2, XCircle, ChevronRight, RefreshCw, AlertTriangle } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/Button'
 import { useAppStore } from '@/store'
@@ -67,6 +67,14 @@ function ClaimTracker({ claim }: { claim: Claim }) {
   )
 }
 
+// ✅ greeting function
+function getGreeting() {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { user, setUser, claimList, setClaimList } = useAppStore()
@@ -77,17 +85,37 @@ export default function DashboardPage() {
 
   const fetchUser = async () => {
     try { const res = await authApi.getUser(); setUser(res.data.data) }
-    catch { } finally { setLoadingUser(false) }
+    catch { }
+    finally { setLoadingUser(false) }
   }
 
   const fetchClaims = async (silent = false) => {
     if (!silent) setLoadingClaims(true); else setRefreshing(true)
-    try { const res = await claimApi.list(); setClaimList(res.data.data) }
-    catch { if (!silent) toast.error('Failed to load claims') }
-    finally { setLoadingClaims(false); setRefreshing(false) }
+    try {
+      const res = await claimApi.list()
+      setClaimList(res.data.data)
+    } catch {
+      if (!silent) toast.error('Failed to load claims', { id: 'claims-error' })
+    } finally {
+      setLoadingClaims(false)
+      setRefreshing(false)
+    }
   }
 
-  useEffect(() => { if (!user) fetchUser(); fetchClaims() }, [])
+  useEffect(() => {
+    const init = async () => {
+      if (!user) await fetchUser()
+      await fetchClaims()
+    }
+    init()
+  }, [])
+
+  // ✅ policy expiry check
+  const daysUntilExpiry = user?.policyExpiry
+    ? Math.ceil((new Date(user.policyExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null
+
+  const showExpiryWarning = daysUntilExpiry !== null && daysUntilExpiry <= 30
 
   const handleTrackClaim = (claim: Claim) => {
     useAppStore.getState().setActiveClaim(claim)
@@ -114,6 +142,28 @@ export default function DashboardPage() {
   return (
     <AppLayout>
       <div className="space-y-4">
+
+        {/* ✅ Welcome message */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-lg font-bold text-slate-800">
+            {getGreeting()}, {user?.name?.split(' ')[0] ?? 'there'}! 👋
+          </h1>
+          <p className="text-xs text-slate-400 mt-0.5">
+            {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+          </p>
+        </motion.div>
+
+        {/* ✅ Policy expiry warning */}
+        {showExpiryWarning && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+            style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
+            <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+            <p className="text-xs text-amber-700 font-semibold">
+              Your policy expires in <span className="font-bold">{daysUntilExpiry} days</span> — renew to stay covered.
+            </p>
+          </motion.div>
+        )}
 
         {/* User Profile Card */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
@@ -181,6 +231,7 @@ export default function DashboardPage() {
             onClick={() => navigate('/claim/new')}
             className="rounded-3xl p-5 text-left transition-all duration-300 hover:scale-[1.02]"
             style={{ background: 'rgba(255,255,255,0.9)', border: '1.5px solid #BFDBFE', boxShadow: '0 4px 20px rgba(59,130,246,0.08)' }}>
+            {/* ✅ icon fix — missing # added */}
             <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
               style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)' }}>
               <Plus className="w-4 h-4 text-white" />

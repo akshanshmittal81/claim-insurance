@@ -23,20 +23,20 @@ export const MOCK_AUTH_RESPONSE: AuthResponse = {
 }
 
 export const MOCK_CLAIMS: Claim[] = [
-  {
-    id: 'clm-aabbcc11',
-    vehicleNumber: 'UP14AB1234',
-    status: 'completed',
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'clm-ddeeff22',
-    vehicleNumber: 'UP14AB1234',
-    status: 'ai_analysis',
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-  },
+  // {
+  //   id: 'clm-aabbcc11',
+  //   vehicleNumber: 'UP14AB1234',
+  //   status: 'completed',
+  //   createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+  //   updatedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+  // },
+  // {
+  //   id: 'clm-ddeeff22',
+  //   vehicleNumber: 'UP14AB1234',
+  //   status: 'ai_analysis',
+  //   createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  //   updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+  // },
 ]
 
 export const MOCK_CLAIM_RESULT: ClaimResult = {

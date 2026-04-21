@@ -3,6 +3,8 @@ import { claimApi } from '@/services/api'
 import { useAppStore } from '@/store'
 import type { ClaimStatus } from '@/types'
 import { POLLING_INTERVAL_MS } from '@/constants'
+import { requestNotificationPermission, sendClaimNotification } from '@/utils/notifications'
+import { claimIdToDisplay } from '@/utils'
 
 const TERMINAL_STATUSES: ClaimStatus[] = ['completed', 'rejected']
 
@@ -17,6 +19,12 @@ export function useClaimPolling({ claimId, onComplete, onError }: UseClaimPollin
   const claimStatus = useAppStore((s) => s.claimStatus)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const isPollingRef = useRef(false)
+  const prevStatusRef = useRef<ClaimStatus | null>(null)  // ← prev status track karo
+
+  // App load hote hi permission maango
+  useEffect(() => {
+    requestNotificationPermission()
+  }, [])
 
   const poll = useCallback(async () => {
     if (!claimId || isPollingRef.current) return
@@ -26,6 +34,12 @@ export function useClaimPolling({ claimId, onComplete, onError }: UseClaimPollin
       const response = await claimApi.getStatus(claimId)
       const { status } = response.data.data
       setClaimStatus(status)
+
+      // Sirf tab notification bhejo jab status change hua ho
+      if (prevStatusRef.current !== status) {
+        prevStatusRef.current = status
+        sendClaimNotification(status, claimIdToDisplay(claimId), claimId)
+      }
 
       if (TERMINAL_STATUSES.includes(status)) {
         if (intervalRef.current) {
@@ -54,7 +68,5 @@ export function useClaimPolling({ claimId, onComplete, onError }: UseClaimPollin
         intervalRef.current = null
       }
     }
-  }, [claimId, poll, claimStatus])
-
-  return { claimStatus }
+  }, [claimId, poll])
 }

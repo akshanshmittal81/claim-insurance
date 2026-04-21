@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FileText, Clock, CheckCircle2, XCircle, ChevronRight, RefreshCw, Plus } from 'lucide-react'
+import { FileText, Clock, CheckCircle2, XCircle, ChevronRight, RefreshCw, Plus, Search, ArrowUpDown } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/Button'
 import { useAppStore } from '@/store'
@@ -78,6 +78,8 @@ export default function MyClaimsPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all')
+  const [search, setSearch] = useState('')
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
 
   const fetchClaims = async (silent = false) => {
     if (!silent) setLoading(true); else setRefreshing(true)
@@ -91,17 +93,12 @@ export default function MyClaimsPage() {
   const handleTrackClaim = (claim: Claim) => {
     const store = useAppStore.getState()
     store.setActiveClaim(claim)
-
-    // Sirf active claims ke liye result clear karo
-    // Completed/rejected ke liye null mat karo — result page fetch karega
     if (claim.status !== 'completed' && claim.status !== 'rejected') {
       store.setClaimResult(null)
     }
-
     if (typeof store.setClaimStatus === 'function') {
       store.setClaimStatus(claim.status)
     }
-
     navigate(claim.status === 'completed' || claim.status === 'rejected'
       ? `/claim/${claim.id}/result` : `/claim/${claim.id}/processing`)
   }
@@ -121,11 +118,27 @@ export default function MyClaimsPage() {
   const activeCount = claimList.filter(c => c.status !== 'completed' && c.status !== 'rejected').length
   const completedCount = claimList.filter(c => c.status === 'completed' || c.status === 'rejected').length
 
-  const filtered = claimList.filter(c => {
-    if (filter === 'active') return c.status !== 'completed' && c.status !== 'rejected'
-    if (filter === 'completed') return c.status === 'completed' || c.status === 'rejected'
-    return true
-  })
+  // Filter + Search + Sort
+  const filtered = claimList
+    .filter(c => {
+      if (filter === 'active') return c.status !== 'completed' && c.status !== 'rejected'
+      if (filter === 'completed') return c.status === 'completed' || c.status === 'rejected'
+      return true
+    })
+    .filter(c => {
+      if (!search.trim()) return true
+      const q = search.toLowerCase()
+      return (
+        claimIdToDisplay(c.id).toLowerCase().includes(q) ||
+        c.status.replace(/_/g, ' ').toLowerCase().includes(q) ||
+        c.vehicleNumber?.toLowerCase().includes(q)
+      )
+    })
+    .sort((a, b) => {
+      const da = new Date(a.createdAt).getTime()
+      const db = new Date(b.createdAt).getTime()
+      return sortOrder === 'newest' ? db - da : da - db
+    })
 
   return (
     <AppLayout>
@@ -151,6 +164,32 @@ export default function MyClaimsPage() {
           </div>
         </motion.div>
 
+        {/* Search + Sort */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}
+          className="flex gap-2">
+          <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE' }}>
+            <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+            <input
+              type="text"
+              placeholder="Search by claim ID or status..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="flex-1 text-xs bg-transparent outline-none text-slate-700 placeholder-slate-400"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="text-slate-400 hover:text-slate-600 text-xs">✕</button>
+            )}
+          </div>
+          <button
+            onClick={() => setSortOrder(s => s === 'newest' ? 'oldest' : 'newest')}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+            style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE', color: '#64748B' }}>
+            <ArrowUpDown className="w-3.5 h-3.5" />
+            {sortOrder === 'newest' ? 'Newest' : 'Oldest'}
+          </button>
+        </motion.div>
+
         {/* Filter tabs */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           className="flex gap-2">
@@ -171,6 +210,13 @@ export default function MyClaimsPage() {
           ))}
         </motion.div>
 
+        {/* Search results info */}
+        {search && (
+          <p className="text-xs text-slate-400">
+            {filtered.length} result{filtered.length !== 1 ? 's' : ''} for "<span className="text-slate-600 font-semibold">{search}</span>"
+          </p>
+        )}
+
         {/* Claims */}
         {loading ? (
           <div className="space-y-3">
@@ -182,10 +228,12 @@ export default function MyClaimsPage() {
             <FileText className="w-10 h-10 text-blue-200 mx-auto mb-3" />
             <p className="text-slate-600 font-semibold">No claims found</p>
             <p className="text-xs text-slate-400 mt-1 mb-6">
-              {filter === 'all' ? 'Submit your first claim to get started' : `No ${filter} claims`}
+              {search ? `No results for "${search}"` : filter === 'all' ? 'Submit your first claim to get started' : `No ${filter} claims`}
             </p>
-            <Button variant="primary" size="sm" icon={<Plus className="w-4 h-4" />}
-              onClick={() => navigate('/claim/new')}>New Claim</Button>
+            {!search && (
+              <Button variant="primary" size="sm" icon={<Plus className="w-4 h-4" />}
+                onClick={() => navigate('/claim/new')}>New Claim</Button>
+            )}
           </div>
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}

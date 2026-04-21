@@ -48,7 +48,6 @@ export default function ClaimCapturePage() {
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [isRecording])
 
-  // Close lightbox on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightbox(null) }
     window.addEventListener('keydown', handler)
@@ -69,35 +68,36 @@ export default function ClaimCapturePage() {
   }
 
   const handleStartCamera = async () => { setMode('camera'); await startCamera() }
-
-  const handleCapturePhoto = () => {
-    const img = capturePhoto()
-    if (img) setMode('photo-preview')
-  }
-
+  const handleCapturePhoto = () => { const img = capturePhoto(); if (img) setMode('photo-preview') }
   const handleAcceptPhoto = () => { stopCamera(); setMode('preview') }
-
   const handleRetakePhoto = async () => { clearCapture(); setMode('camera'); await startCamera() }
-
   const handleStartVideo = () => { startRecording(); toast('Recording started...', { icon: '🔴' }) }
 
   const handleStopVideo = async () => {
     const thumbnail = captureThumbnail()
     const b = await stopRecording()
     if (b) {
-      setPreviewVideo({ base64: b, duration: recordingSeconds, thumbnail: thumbnail ?? undefined })
+      const duration = recordingSeconds
       stopCamera()
-      setMode('video-preview')
+      setPreviewVideo({ base64: b, duration, thumbnail: thumbnail ?? undefined })
       setRecordingSeconds(0)
+      setMode('video-preview')
     }
   }
 
   const handleAcceptVideo = () => {
-    if (previewVideo) { setRecordedVideos(prev => [...prev, previewVideo]); setPreviewVideo(null) }
+    if (previewVideo) {
+      setRecordedVideos(prev => [...prev, previewVideo])
+      setPreviewVideo(null)
+    }
     setMode('preview')
   }
 
-  const handleRetakeVideo = async () => { setPreviewVideo(null); setMode('camera'); await startCamera() }
+  const handleRetakeVideo = async () => {
+    setPreviewVideo(null)
+    setMode('camera')
+    await startCamera()
+  }
 
   const handleClear = () => {
     clearCapture(); setUploadedImages([]); setRecordedVideos([])
@@ -183,7 +183,6 @@ export default function ClaimCapturePage() {
           <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{locationEnabled ? 'GPS enabled' : 'Location off'}</span>
         </div>
 
-        {/* Main Area */}
         <div className="rounded-3xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.9)', border: '1.5px solid #BFDBFE', boxShadow: '0 4px 24px rgba(59,130,246,0.08)' }}>
           <AnimatePresence mode="wait">
 
@@ -274,33 +273,29 @@ export default function ClaimCapturePage() {
               </motion.div>
             )}
 
-            {/* VIDEO PREVIEW */}
+            {/* VIDEO PREVIEW — accept/retake screen */}
             {mode === 'video-preview' && previewVideo && (
               <motion.div key="video-preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative">
-                <div className="relative w-full aspect-video" style={{ background: '#0F172A' }}>
-                  {previewVideo.thumbnail
-                    ? <img src={previewVideo.thumbnail} alt="Video preview" className="w-full h-full object-cover opacity-80" />
-                    : <div className="w-full h-full flex items-center justify-center"><Video className="w-16 h-16 text-slate-600" /></div>
-                  }
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-xl"
-                      style={{ background: 'rgba(0,0,0,0.55)', border: '2px solid rgba(255,255,255,0.3)' }}>
-                      <Video className="w-7 h-7 text-white" />
-                    </div>
-                  </div>
-                  <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'rgba(0,0,0,0.7)' }}>
+                <div className="relative w-full aspect-video bg-slate-900">
+                  {/* ✅ ACTUAL VIDEO PLAYBACK */}
+                  <video
+                    src={`data:video/webm;base64,${previewVideo.base64}`}
+                    className="w-full h-full object-contain"
+                    controls
+                    autoPlay
+                    playsInline
+                  />
+                  <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full pointer-events-none" style={{ background: 'rgba(0,0,0,0.7)' }}>
                     <span className="w-2 h-2 rounded-full bg-red-500" />
                     <span className="text-xs font-bold text-white font-mono">{formatTime(previewVideo.duration)}</span>
                   </div>
                 </div>
-                <div className="absolute inset-0 flex flex-col items-center justify-end pb-6 gap-3">
-                  <p className="text-white text-sm font-semibold px-4 py-1.5 rounded-full" style={{ background: 'rgba(0,0,0,0.5)' }}>
-                    Video recorded — use this?
-                  </p>
+                <div className="flex flex-col items-center gap-3 py-4">
+                  <p className="text-slate-700 text-sm font-semibold">Video recorded — use this?</p>
                   <div className="flex gap-3">
                     <button type="button" onClick={handleRetakeVideo}
                       className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
-                      style={{ background: 'rgba(255,255,255,0.9)', color: '#334155' }}>
+                      style={{ background: '#F1F5F9', color: '#334155', border: '1px solid #E2E8F0' }}>
                       <Camera className="w-4 h-4" /> Retake
                     </button>
                     <button type="button" onClick={handleAcceptVideo}
@@ -347,14 +342,12 @@ export default function ClaimCapturePage() {
                         style={{ border: '1.5px solid #BFDBFE' }}
                         onClick={() => setLightbox({ type: 'image', src: img })}>
                         <img src={img} alt={`Evidence ${i + 1}`} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                        {/* Hover overlay */}
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                           style={{ background: 'rgba(0,0,0,0.3)' }}>
                           <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.9)' }}>
                             <ImageIcon className="w-4 h-4 text-slate-700" />
                           </div>
                         </div>
-                        {/* Remove button */}
                         <button type="button"
                           onClick={(e) => { e.stopPropagation(); handleRemoveImage(i) }}
                           className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -378,21 +371,26 @@ export default function ClaimCapturePage() {
                   </div>
                 )}
 
-                {/* Videos */}
+                {/* Videos List */}
                 {recordedVideos.length > 0 && (
                   <div className="space-y-2 mb-3">
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Recorded Videos</p>
                     {recordedVideos.map((vid, i) => (
+                      // ✅ FIX 1: onClick ab base64 pass karta hai, thumbnail nahi
                       <div key={i}
                         className="flex items-center gap-3 p-3 rounded-xl group cursor-pointer transition-colors hover:bg-blue-50"
                         style={{ background: '#F8FAFF', border: '1px solid #DBEAFE' }}
-                        onClick={() => vid.thumbnail && setLightbox({ type: 'video', src: vid.thumbnail, duration: vid.duration })}>
+                        onClick={() => setLightbox({ type: 'video', src: vid.base64, duration: vid.duration })}>
                         <div className="w-16 h-12 rounded-lg overflow-hidden flex-shrink-0 relative"
                           style={{ background: '#0F172A', border: '1px solid #BFDBFE' }}>
-                          {vid.thumbnail
-                            ? <img src={vid.thumbnail} alt="thumb" className="w-full h-full object-cover" />
-                            : <div className="w-full h-full flex items-center justify-center"><Video className="w-5 h-5 text-slate-400" /></div>
-                          }
+                          {/* ✅ FIX 1: Actual <video> tag for thumbnail frame */}
+                          <video
+                            src={`data:video/webm;base64,${vid.base64}`}
+                            className="w-full h-full object-cover"
+                            muted
+                            playsInline
+                            onLoadedMetadata={(e) => { (e.target as HTMLVideoElement).currentTime = 0.5 }}
+                          />
                           <div className="absolute inset-0 flex items-center justify-center">
                             <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
                               <Video className="w-3 h-3 text-white" />
@@ -469,33 +467,30 @@ export default function ClaimCapturePage() {
       <AnimatePresence>
         {lightbox && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ background: 'rgba(0,0,0,0.88)' }}
             onClick={() => setLightbox(null)}>
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }} transition={{ duration: 0.2 }}
               className="relative max-w-2xl w-full rounded-2xl overflow-hidden shadow-2xl"
               onClick={e => e.stopPropagation()}>
 
               {lightbox.type === 'image' ? (
                 <img src={lightbox.src} alt="Full view" className="w-full object-contain max-h-[80vh]" style={{ background: '#0F172A' }} />
               ) : (
-                <div className="relative w-full aspect-video" style={{ background: '#0F172A' }}>
-                  {lightbox.src && <img src={lightbox.src} alt="Video" className="w-full h-full object-cover opacity-80" />}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-xl"
-                      style={{ background: 'rgba(0,0,0,0.6)', border: '2px solid rgba(255,255,255,0.3)' }}>
-                      <Video className="w-9 h-9 text-white" />
-                    </div>
-                  </div>
+                // ✅ FIX 2: Actual video player in lightbox
+                <div className="relative w-full aspect-video bg-slate-900">
+                  <video
+                    src={`data:video/webm;base64,${lightbox.src}`}
+                    className="w-full h-full object-contain"
+                    controls
+                    autoPlay
+                    playsInline
+                  />
                   {lightbox.duration !== undefined && (
-                    <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'rgba(0,0,0,0.7)' }}>
+                    <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full pointer-events-none" style={{ background: 'rgba(0,0,0,0.7)' }}>
                       <span className="w-2 h-2 rounded-full bg-red-500" />
                       <span className="text-xs font-bold text-white font-mono">{formatTime(lightbox.duration)}</span>
                     </div>
@@ -503,14 +498,11 @@ export default function ClaimCapturePage() {
                 </div>
               )}
 
-              {/* Close button */}
               <button onClick={() => setLightbox(null)}
                 className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-white/20"
                 style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)' }}>
                 <X className="w-4 h-4 text-white" />
               </button>
-
-              {/* Tap outside hint */}
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs text-white/50">
                 Tap outside to close
               </div>
