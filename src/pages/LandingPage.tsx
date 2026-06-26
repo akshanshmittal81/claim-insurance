@@ -108,14 +108,7 @@ export default function LandingPage() {
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
-          <motion.div
-            initial="hidden" animate="visible" variants={fadeUp} custom={0}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold text-blue-700 mb-8"
-            style={{ background: 'linear-gradient(135deg, #DBEAFE, #D1FAE5)', border: '1px solid #BFDBFE' }}
-          >
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Cognizant Technoverse 2026 · Team ClaimTitans · MIET Meerut
-          </motion.div>
+         
 
           <motion.h1
             initial="hidden" animate="visible" variants={fadeUp} custom={1}
@@ -271,7 +264,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-blue-500" />
-            <span>ClaimTitans · Cognizant Technoverse 2026</span>
+            
           </div>
           <span>MIET Meerut · Team ClaimTitans</span>
         </div>
