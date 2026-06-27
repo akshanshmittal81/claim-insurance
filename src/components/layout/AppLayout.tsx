@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  LayoutDashboard, Plus, ListChecks, LogOut, Shield, ChevronRight, Sun, Moon,
+  LayoutDashboard, Plus, ListChecks, LogOut, Shield, ChevronRight, Sun, Moon, ShieldCheck,
 } from 'lucide-react'
 import { useAppStore } from '@/store'
 import { cn } from '@/utils'
@@ -90,6 +90,25 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </Link>
               )
             })}
+
+            {/* Admin Panel link */}
+            <Link
+              to="/admin"
+              className={cn(
+                'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200',
+                location.pathname === '/admin'
+                  ? 'text-red-500'
+                  : darkMode
+                    ? 'text-red-400 hover:bg-red-900/20'
+                    : 'text-red-500 hover:bg-red-50'
+              )}
+              style={location.pathname === '/admin' ? {
+                background: darkMode ? 'rgba(220,38,38,0.15)' : '#FFF1F2',
+                border: '1px solid #FECDD3'
+              } : {}}>
+              <ShieldCheck className="w-4 h-4" />
+              Admin Panel
+            </Link>
           </nav>
 
           {/* Right */}
@@ -135,7 +154,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         borderTop: darkMode ? '1px solid rgba(51,65,85,0.8)' : '1px solid rgba(191,219,254,0.6)',
         boxShadow: '0 -4px 20px rgba(59,130,246,0.08)'
       }}>
-        <div className="grid grid-cols-3 h-16">
+        <div className="grid grid-cols-4 h-16">
           {navItems.map(({ href, label, icon: Icon }) => {
             const active = location.pathname === href
             return (
@@ -150,6 +169,14 @@ export function AppLayout({ children }: AppLayoutProps) {
               </Link>
             )
           })}
+          {/* Admin tab mobile */}
+          <Link to="/admin" className={cn(
+            'flex flex-col items-center justify-center gap-1 text-xs font-medium transition-all duration-200',
+            location.pathname === '/admin' ? 'text-red-500' : darkMode ? 'text-slate-500' : 'text-slate-400'
+          )}>
+            <ShieldCheck className="w-5 h-5" />
+            Admin
+          </Link>
         </div>
       </nav>
 
