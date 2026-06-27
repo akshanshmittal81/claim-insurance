@@ -9,7 +9,7 @@ import { claimApi, authApi } from '@/services/api'
 import { formatDate, claimIdToDisplay } from '@/utils'
 import type { Claim } from '@/types'
 import toast from 'react-hot-toast'
-import HealthDashboard from '@/components/ui/HealthDashboard'
+
 
 const STEPS = [
   { key: 'uploaded',    label: 'Submitted' },
@@ -222,11 +222,6 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
             </div>
           ))}
-        </motion.div>
-
-        {/* ✅ System Health Dashboard — Self Diagnosis Feature */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-          <HealthDashboard />
         </motion.div>
 
         {/* Action Cards */}
