@@ -221,15 +221,15 @@ export default function ClaimResultPage() {
 
   if (loading) return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto space-y-4">
-        {[1,2,3].map(i => <div key={i} className="rounded-3xl h-32 shimmer-bg" />)}
+      <div className="max-w-2xl mx-auto space-y-4 px-1 sm:px-0">
+        {[1,2,3].map(i => <div key={i} className="rounded-2xl sm:rounded-3xl h-32 shimmer-bg" />)}
       </div>
     </AppLayout>
   )
 
   if (!result) return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto rounded-3xl p-16 text-center"
+      <div className="max-w-2xl mx-auto rounded-2xl sm:rounded-3xl p-10 sm:p-16 text-center"
         style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE' }}>
         <p className="text-slate-500 mb-4">Result not available</p>
         <Button variant="primary" onClick={fetchResult} icon={<RefreshCw className="w-4 h-4" />}>Retry</Button>
@@ -260,25 +260,25 @@ export default function ClaimResultPage() {
         { label: claimIdToDisplay(result.claimId) },
         { label: 'Result' }
       ]} />
-      <div className="max-w-2xl mx-auto space-y-4">
+      <div className="max-w-2xl mx-auto space-y-4 px-1 sm:px-0">
 
         {/* Decision Banner */}
         <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}
-          className="rounded-3xl p-6"
+          className="rounded-2xl sm:rounded-3xl p-4 sm:p-6"
           style={{ background: decisionGradient.bg, border: `1.5px solid ${decisionGradient.border}`, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg"
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg"
               style={{ background: 'white' }}>
-              <DecisionIcon className="w-8 h-8" style={{ color: decisionGradient.icon }} />
+              <DecisionIcon className="w-6 h-6 sm:w-8 sm:h-8" style={{ color: decisionGradient.icon }} />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">Claim Decision</p>
-              <h1 className="text-3xl font-bold" style={{ color: decisionGradient.icon }}>{decisionCfg.label}</h1>
+              <h1 className="text-xl sm:text-3xl font-bold truncate" style={{ color: decisionGradient.icon }}>{decisionCfg.label}</h1>
               <p className="text-xs text-slate-400 mt-1">{formatDate(result.decidedAt)}</p>
             </div>
-            <div className="ml-auto text-right">
+            <div className="ml-auto text-right flex-shrink-0">
               <p className="text-xs text-slate-400">AI Confidence</p>
-              <p className="text-3xl font-bold font-mono text-slate-700">{result.aiConfidence}%</p>
+              <p className="text-xl sm:text-3xl font-bold font-mono text-slate-700">{result.aiConfidence}%</p>
             </div>
           </div>
         </motion.div>
@@ -286,7 +286,7 @@ export default function ClaimResultPage() {
         {/* Damage + Fraud Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="rounded-3xl p-5"
+            className="rounded-2xl sm:rounded-3xl p-4 sm:p-5"
             style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE', boxShadow: '0 4px 20px rgba(59,130,246,0.06)' }}>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Damage Severity</p>
             <div className={`inline-flex items-center px-3 py-1.5 rounded-xl text-sm font-bold mb-4 ${damageCfg.bg} ${damageCfg.color} ${damageCfg.border}`}>
@@ -295,22 +295,22 @@ export default function ClaimResultPage() {
             <div className="space-y-2 mb-4">
               {result.detectedDamages.map((dmg) => (
                 <div key={dmg} className="flex items-center gap-2 text-xs text-slate-500">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />{dmg}
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" /><span className="break-words">{dmg}</span>
                 </div>
               ))}
             </div>
             <div className="pt-4 border-t border-blue-50">
               <p className="text-xs text-slate-400">Estimated Repair Cost</p>
-              <p className="text-2xl font-bold font-mono text-slate-800 mt-0.5">{formatCurrency(result.estimatedRepairCost)}</p>
+              <p className="text-xl sm:text-2xl font-bold font-mono text-slate-800 mt-0.5 break-all">{formatCurrency(result.estimatedRepairCost)}</p>
             </div>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-            className="rounded-3xl p-5"
+            className="rounded-2xl sm:rounded-3xl p-4 sm:p-5"
             style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE', boxShadow: '0 4px 20px rgba(59,130,246,0.06)' }}>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Fraud Analysis</p>
-            <div className="flex items-end gap-2 mb-3">
-              <span className={`text-4xl font-bold font-mono ${fraudCfg.color}`}>{result.fraudScore}</span>
+            <div className="flex items-end gap-2 mb-3 flex-wrap">
+              <span className={`text-3xl sm:text-4xl font-bold font-mono ${fraudCfg.color}`}>{result.fraudScore}</span>
               <span className="text-slate-400 text-sm mb-1">/100</span>
               <span className="ml-auto mb-1 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold"
                 style={{
@@ -336,7 +336,7 @@ export default function ClaimResultPage() {
         {/* AI Reasoning */}
         {result.explainability.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="rounded-3xl p-5"
+            className="rounded-2xl sm:rounded-3xl p-4 sm:p-5"
             style={{ background: 'linear-gradient(135deg, #FFFBEB, #FEF3C7)', border: '1px solid #FDE68A', boxShadow: '0 4px 20px rgba(245,158,11,0.08)' }}>
             <div className="flex items-center gap-2 mb-4">
               <Lightbulb className="w-4 h-4 text-amber-500" />
@@ -346,7 +346,7 @@ export default function ClaimResultPage() {
               {result.explainability.map((reason, i) => (
                 <div key={i} className="flex items-start gap-3 text-sm text-slate-600">
                   <span className="font-mono text-xs text-amber-500 mt-0.5 flex-shrink-0">{String(i + 1).padStart(2, '0')}</span>
-                  {reason}
+                  <span className="break-words">{reason}</span>
                 </div>
               ))}
             </div>
@@ -356,7 +356,7 @@ export default function ClaimResultPage() {
         {/* Garage */}
         {result.garage && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-            className="rounded-3xl p-5"
+            className="rounded-2xl sm:rounded-3xl p-4 sm:p-5"
             style={{ background: 'linear-gradient(135deg, #F0FDF4, #DCFCE7)', border: '1px solid #BBF7D0', boxShadow: '0 4px 20px rgba(16,185,129,0.08)' }}>
             <div className="flex items-center gap-2 mb-4">
               <MapPin className="w-4 h-4 text-emerald-500" />
@@ -364,10 +364,10 @@ export default function ClaimResultPage() {
             </div>
             <p className="font-bold text-slate-800">{result.garage.name}</p>
             <p className="text-sm text-slate-500 mt-0.5">{result.garage.address}</p>
-            <div className="flex items-center gap-4 text-sm text-slate-500 mt-3">
-              <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" />{result.garage.phone}</span>
-              <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{result.garage.distance}</span>
-              <span className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-400" />{result.garage.rating}/5</span>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500 mt-3">
+              <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 flex-shrink-0" />{result.garage.phone}</span>
+              <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 flex-shrink-0" />{result.garage.distance}</span>
+              <span className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />{result.garage.rating}/5</span>
             </div>
           </motion.div>
         )}
@@ -375,9 +375,9 @@ export default function ClaimResultPage() {
         {/* Payment */}
         {result.payment && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-            className="rounded-3xl p-5"
+            className="rounded-2xl sm:rounded-3xl p-4 sm:p-5"
             style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE', boxShadow: '0 4px 20px rgba(59,130,246,0.06)' }}>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
               <div className="flex items-center gap-2">
                 <Banknote className="w-4 h-4 text-blue-500" />
                 <h2 className="font-bold text-slate-700 text-sm">Payment Status</h2>
@@ -391,9 +391,9 @@ export default function ClaimResultPage() {
                 {result.payment.status}
               </span>
             </div>
-            <p className="text-3xl font-bold font-mono text-slate-800">{formatCurrency(result.payment.amount, result.payment.currency)}</p>
+            <p className="text-2xl sm:text-3xl font-bold font-mono text-slate-800 break-all">{formatCurrency(result.payment.amount, result.payment.currency)}</p>
             {result.payment.transactionId && (
-              <p className="text-xs font-mono text-slate-400 mt-1">Txn: {result.payment.transactionId}</p>
+              <p className="text-xs font-mono text-slate-400 mt-1 break-all">Txn: {result.payment.transactionId}</p>
             )}
           </motion.div>
         )}

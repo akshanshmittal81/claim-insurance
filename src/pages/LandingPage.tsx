@@ -79,31 +79,33 @@ export default function LandingPage() {
         borderBottom: '1px solid rgba(191,219,254,0.5)',
         boxShadow: '0 2px 20px rgba(59,130,246,0.07)'
       }}>
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg"
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
               style={{ background: 'linear-gradient(135deg, #2563EB, #10B981)' }}>
-              <Shield className="w-5 h-5 text-white" />
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <span className="font-bold text-lg text-slate-800">
+            <span className="font-bold text-base sm:text-lg text-slate-800">
               Claim<span className="gradient-text">Titans</span>
             </span>
           </div>
-          <Link to="/auth" className="btn-primary text-sm py-2 px-5">
-            Get Started <ChevronRight className="w-4 h-4" />
+          <Link to="/auth" className="btn-primary text-sm py-2 px-3.5 sm:px-5">
+            <span className="hidden sm:inline">Get Started</span>
+            <span className="sm:hidden">Start</span>
+            <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="relative pt-32 pb-24 px-6">
+      <section className="relative pt-28 sm:pt-32 pb-16 sm:pb-24 px-4 sm:px-6">
         {/* Decorative circles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 right-10 w-72 h-72 rounded-full opacity-20"
+          <div className="absolute top-20 right-10 w-44 h-44 sm:w-72 sm:h-72 rounded-full opacity-20"
             style={{ background: 'radial-gradient(circle, #3B82F6, transparent)' }} />
-          <div className="absolute top-40 left-10 w-48 h-48 rounded-full opacity-15"
+          <div className="absolute top-40 left-10 w-32 h-32 sm:w-48 sm:h-48 rounded-full opacity-15"
             style={{ background: 'radial-gradient(circle, #10B981, transparent)' }} />
-          <div className="absolute bottom-10 right-1/3 w-56 h-56 rounded-full opacity-10"
+          <div className="absolute bottom-10 right-1/3 w-36 h-36 sm:w-56 sm:h-56 rounded-full opacity-10"
             style={{ background: 'radial-gradient(circle, #0EA5E9, transparent)' }} />
         </div>
 
@@ -112,7 +114,7 @@ export default function LandingPage() {
 
           <motion.h1
             initial="hidden" animate="visible" variants={fadeUp} custom={1}
-            className="text-5xl sm:text-6xl md:text-7xl font-bold leading-tight tracking-tight mb-6 text-slate-900"
+            className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight mb-5 sm:mb-6 text-slate-900"
           >
             Insurance claims,{' '}
             <span className="gradient-text">reimagined</span>
@@ -121,7 +123,7 @@ export default function LandingPage() {
 
           <motion.p
             initial="hidden" animate="visible" variants={fadeUp} custom={2}
-            className="text-lg sm:text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed"
+            className="text-base sm:text-lg md:text-xl text-slate-500 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed px-2"
           >
             Submit your vehicle damage claim in seconds. Our AI handles GAN detection,
             fraud analysis, damage assessment, and payment release — automatically and transparently.
@@ -129,7 +131,7 @@ export default function LandingPage() {
 
           <motion.div
             initial="hidden" animate="visible" variants={fadeUp} custom={3}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 px-4 sm:px-0"
           >
             <Link to="/auth" className="btn-primary text-base py-3.5 px-8 w-full sm:w-auto">
               File a Claim <ArrowRight className="w-4 h-4" />
@@ -144,31 +146,31 @@ export default function LandingPage() {
         <motion.div
           initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
-          className="relative max-w-3xl mx-auto mt-20 grid grid-cols-2 md:grid-cols-4 gap-4"
+          className="relative max-w-3xl mx-auto mt-14 sm:mt-20 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
         >
           {stats.map(({ value, label }) => (
-            <div key={label} className="card text-center py-5 card-hover">
-              <div className="text-2xl font-bold gradient-text mb-1">{value}</div>
-              <div className="text-xs text-slate-500">{label}</div>
+            <div key={label} className="card text-center py-4 sm:py-5 card-hover px-2">
+              <div className="text-lg sm:text-2xl font-bold gradient-text mb-1 whitespace-nowrap">{value}</div>
+              <div className="text-[11px] sm:text-xs text-slate-500">{label}</div>
             </div>
           ))}
         </motion.div>
       </section>
 
       {/* Features */}
-      <section className="py-24 px-6">
+      <section className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial="hidden" whileInView="visible" viewport={{ once: true }}
-            variants={fadeUp} className="text-center mb-16"
+            variants={fadeUp} className="text-center mb-10 sm:mb-16"
           >
             <h2 className="section-title mb-4">Built for the future of insurance</h2>
-            <p className="text-slate-500 max-w-xl mx-auto">
+            <p className="text-slate-500 max-w-xl mx-auto px-2">
               Every component designed to remove friction, detect fraud, and deliver decisions at machine speed.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {features.map((feature, i) => {
               const Icon = feature.icon
               return (
@@ -177,10 +179,10 @@ export default function LandingPage() {
                   initial="hidden" whileInView="visible"
                   viewport={{ once: true, margin: '-40px' }}
                   variants={fadeUp} custom={i * 0.05}
-                  className="rounded-3xl p-6 card-hover cursor-default"
+                  className="rounded-2xl sm:rounded-3xl p-5 sm:p-6 card-hover cursor-default"
                   style={{ background: feature.gradient, border: `1px solid ${feature.border}` }}
                 >
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 shadow-md"
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center mb-4 shadow-md"
                     style={{ background: feature.iconBg }}>
                     <Icon className="w-5 h-5 text-white" />
                   </div>
@@ -194,11 +196,11 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section id="how-it-works" className="py-24 px-6">
+      <section id="how-it-works" className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
           <motion.div
             initial="hidden" whileInView="visible" viewport={{ once: true }}
-            variants={fadeUp} className="text-center mb-16"
+            variants={fadeUp} className="text-center mb-10 sm:mb-16"
           >
             <h2 className="section-title mb-4">From photo to payment</h2>
             <p className="text-slate-500">Five steps, fully automated.</p>
@@ -210,18 +212,18 @@ export default function LandingPage() {
                 key={step.n}
                 initial="hidden" whileInView="visible"
                 viewport={{ once: true }} variants={fadeUp} custom={i * 0.1}
-                className="flex items-center gap-5 rounded-2xl px-6 py-4 card-hover"
+                className="flex items-center gap-3 sm:gap-5 rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 card-hover"
                 style={{
                   background: 'rgba(255,255,255,0.85)',
                   border: '1px solid rgba(191,219,254,0.6)',
                   boxShadow: '0 2px 12px rgba(59,130,246,0.06)'
                 }}
               >
-                <span className="font-mono text-xs font-bold text-white px-3 py-1.5 rounded-lg flex-shrink-0"
+                <span className="font-mono text-xs font-bold text-white px-2.5 sm:px-3 py-1.5 rounded-lg flex-shrink-0"
                   style={{ background: 'linear-gradient(135deg, #2563EB, #10B981)' }}>
                   {step.n}
                 </span>
-                <span className="text-slate-700 font-medium">{step.label}</span>
+                <span className="text-slate-700 font-medium text-sm sm:text-base">{step.label}</span>
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto flex-shrink-0" />
               </motion.div>
             ))}
@@ -230,12 +232,12 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 px-6">
+      <section className="py-16 sm:py-24 px-4 sm:px-6">
         <motion.div
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
           className="max-w-2xl mx-auto text-center"
         >
-          <div className="rounded-3xl py-16 px-8 relative overflow-hidden"
+          <div className="rounded-2xl sm:rounded-3xl py-12 sm:py-16 px-6 sm:px-8 relative overflow-hidden"
             style={{
               background: 'linear-gradient(135deg, #1D4ED8, #0EA5E9, #10B981)',
               boxShadow: '0 20px 60px rgba(37,99,235,0.35)'
@@ -244,12 +246,12 @@ export default function LandingPage() {
             <div className="absolute inset-0 opacity-10"
               style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 50%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
             <div className="relative">
-              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
                 Ready to file your claim?
               </h2>
-              <p className="text-blue-100 mb-8">Takes less than 2 minutes. No paperwork. No waiting.</p>
+              <p className="text-blue-100 mb-8 text-sm sm:text-base">Takes less than 2 minutes. No paperwork. No waiting.</p>
               <Link to="/auth"
-                className="inline-flex items-center gap-2 px-10 py-4 rounded-2xl font-bold text-blue-700 transition-all duration-200 hover:scale-105"
+                className="inline-flex items-center gap-2 px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl font-bold text-blue-700 transition-all duration-200 active:scale-95 sm:hover:scale-105"
                 style={{ background: 'white', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
               >
                 Get Started Free <ArrowRight className="w-4 h-4" />
@@ -260,13 +262,12 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-8 px-6" style={{ borderColor: 'rgba(191,219,254,0.4)', background: 'rgba(255,255,255,0.5)' }}>
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+      <footer className="border-t py-6 sm:py-8 px-4 sm:px-6" style={{ borderColor: 'rgba(191,219,254,0.4)', background: 'rgba(255,255,255,0.5)' }}>
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-xs text-slate-400">
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-blue-500" />
-            
           </div>
-          <span>MIET Meerut · Team ClaimTitans</span>
+          <span className="text-center">MIET Meerut · Team ClaimTitans</span>
         </div>
       </footer>
     </div>

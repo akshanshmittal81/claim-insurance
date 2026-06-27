@@ -56,15 +56,15 @@ export function AppLayout({ children }: AppLayoutProps) {
         borderBottom: darkMode ? '1px solid rgba(51,65,85,0.8)' : '1px solid rgba(191,219,254,0.6)',
         boxShadow: '0 2px 20px rgba(59,130,246,0.08)'
       }}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 md:h-16 flex items-center justify-between">
 
           {/* Logo */}
-          <Link to="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg"
+          <Link to="/dashboard" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center shadow-lg"
               style={{ background: 'linear-gradient(135deg, #2563EB, #10B981)' }}>
-              <Shield className="w-5 h-5 text-white" />
+              <Shield className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </div>
-            <span className={`font-bold text-lg tracking-tight ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+            <span className={`font-bold text-base md:text-lg tracking-tight ${darkMode ? 'text-white' : 'text-slate-800'}`}>
               Claim<span className="gradient-text">Titans</span>
             </span>
           </Link>
@@ -111,10 +111,10 @@ export function AppLayout({ children }: AppLayoutProps) {
             </Link>
           </nav>
 
-          {/* Right */}
-          <div className="flex items-center gap-2">
+          {/* Right side */}
+          <div className="flex items-center gap-1.5 md:gap-2">
             {user && (
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono font-semibold"
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 md:px-3 md:py-1.5 rounded-xl text-xs font-mono font-semibold"
                 style={{
                   background: darkMode ? 'rgba(37,99,235,0.15)' : 'linear-gradient(135deg, #DBEAFE, #D1FAE5)',
                   border: darkMode ? '1px solid rgba(37,99,235,0.3)' : '1px solid #BFDBFE',
@@ -127,7 +127,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             {/* Dark/Light toggle */}
             <button
               onClick={() => setDarkMode(d => !d)}
-              className="p-2 rounded-xl transition-all duration-200"
+              className="p-1.5 md:p-2 rounded-xl transition-all duration-200"
               style={{
                 background: darkMode ? 'rgba(51,65,85,0.8)' : 'rgba(241,245,249,0.8)',
                 border: darkMode ? '1px solid rgba(71,85,105,0.5)' : '1px solid #E2E8F0',
@@ -138,10 +138,11 @@ export function AppLayout({ children }: AppLayoutProps) {
               }
             </button>
 
+            {/* Sign out — icon only on mobile */}
             <button onClick={handleLogout}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${darkMode ? 'text-slate-400 hover:text-red-400 hover:bg-red-900/20' : 'text-slate-500 hover:text-red-500 hover:bg-red-50'}`}>
+              className={`flex items-center gap-1.5 p-1.5 md:px-3 md:py-2 rounded-xl text-sm font-medium transition-all duration-200 ${darkMode ? 'text-slate-400 hover:text-red-400 hover:bg-red-900/20' : 'text-slate-500 hover:text-red-500 hover:bg-red-50'}`}>
               <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Sign out</span>
+              <span className="hidden md:inline">Sign out</span>
             </button>
           </div>
         </div>
@@ -149,10 +150,11 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40" style={{
-        background: darkMode ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.92)',
+        background: darkMode ? 'rgba(15,23,42,0.97)' : 'rgba(255,255,255,0.97)',
         backdropFilter: 'blur(20px)',
         borderTop: darkMode ? '1px solid rgba(51,65,85,0.8)' : '1px solid rgba(191,219,254,0.6)',
-        boxShadow: '0 -4px 20px rgba(59,130,246,0.08)'
+        boxShadow: '0 -4px 20px rgba(59,130,246,0.08)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
       }}>
         <div className="grid grid-cols-4 h-16">
           {navItems.map(({ href, label, icon: Icon }) => {
@@ -164,8 +166,13 @@ export function AppLayout({ children }: AppLayoutProps) {
                   ? 'text-blue-500'
                   : darkMode ? 'text-slate-500' : 'text-slate-400'
               )}>
-                <Icon className="w-5 h-5" />
-                {label}
+                <div className={cn(
+                  'w-10 h-6 flex items-center justify-center rounded-full transition-all duration-200',
+                  active ? (darkMode ? 'bg-blue-500/20' : 'bg-blue-100') : ''
+                )}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className="text-[10px]">{label}</span>
               </Link>
             )
           })}
@@ -174,8 +181,13 @@ export function AppLayout({ children }: AppLayoutProps) {
             'flex flex-col items-center justify-center gap-1 text-xs font-medium transition-all duration-200',
             location.pathname === '/admin' ? 'text-red-500' : darkMode ? 'text-slate-500' : 'text-slate-400'
           )}>
-            <ShieldCheck className="w-5 h-5" />
-            Admin
+            <div className={cn(
+              'w-10 h-6 flex items-center justify-center rounded-full transition-all duration-200',
+              location.pathname === '/admin' ? (darkMode ? 'bg-red-500/20' : 'bg-red-100') : ''
+            )}>
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <span className="text-[10px]">Admin</span>
           </Link>
         </div>
       </nav>
@@ -187,7 +199,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
-          className="max-w-6xl mx-auto px-4 sm:px-6 py-8"
+          className="max-w-6xl mx-auto px-3 sm:px-6 py-4 md:py-8"
         >
           {children}
         </motion.div>

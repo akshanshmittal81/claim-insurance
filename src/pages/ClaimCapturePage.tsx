@@ -36,17 +36,14 @@ export default function ClaimCapturePage() {
   const recognitionRef = useRef<any>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
-  const descriptionValue = watch('description') || ''
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SpeechRecognition) return
-
     const recognition = new SpeechRecognition()
     recognition.continuous = true
     recognition.interimResults = true
     recognition.lang = 'en-IN'
-
     recognition.onresult = (event: any) => {
       let finalTranscript = ''
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -57,29 +54,17 @@ export default function ClaimCapturePage() {
         setValue('description', current ? current + ' ' + finalTranscript : finalTranscript, { shouldValidate: true })
       }
     }
-
     recognition.onerror = () => setIsListening(false)
     recognition.onend = () => setIsListening(false)
-
     recognitionRef.current = recognition
     return () => recognition.stop()
   }, [setValue, watch])
 
   const toggleListening = () => {
-    if (!recognitionRef.current) {
-      toast.error('Voice input not supported in this browser. Try Chrome.')
-      return
-    }
-    if (isListening) {
-      recognitionRef.current.stop()
-      setIsListening(false)
-    } else {
-      recognitionRef.current.start()
-      setIsListening(true)
-      toast('Listening...', { icon: '🎤' })
-    }
+    if (!recognitionRef.current) { toast.error('Voice input not supported. Try Chrome.'); return }
+    if (isListening) { recognitionRef.current.stop(); setIsListening(false) }
+    else { recognitionRef.current.start(); setIsListening(true); toast('Listening...', { icon: '🎤' }) }
   }
-  
 
   const allImages = [...(capturedImage ? [capturedImage] : []), ...uploadedImages]
   const hasEvidence = allImages.length > 0 || recordedVideos.length > 0
@@ -132,18 +117,11 @@ export default function ClaimCapturePage() {
   }
 
   const handleAcceptVideo = () => {
-    if (previewVideo) {
-      setRecordedVideos(prev => [...prev, previewVideo])
-      setPreviewVideo(null)
-    }
+    if (previewVideo) { setRecordedVideos(prev => [...prev, previewVideo]); setPreviewVideo(null) }
     setMode('preview')
   }
 
-  const handleRetakeVideo = async () => {
-    setPreviewVideo(null)
-    setMode('camera')
-    await startCamera()
-  }
+  const handleRetakeVideo = async () => { setPreviewVideo(null); setMode('camera'); await startCamera() }
 
   const handleClear = () => {
     clearCapture(); setUploadedImages([]); setRecordedVideos([])
@@ -218,34 +196,40 @@ export default function ClaimCapturePage() {
   return (
     <AppLayout>
       <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'New Claim' }]} />
-      <div className="max-w-2xl mx-auto space-y-5">
+      <div className="max-w-2xl mx-auto space-y-4">
+
+        {/* Title */}
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 mb-1">File a Claim</h1>
-          <p className="text-slate-500 text-sm">Capture or upload evidence of vehicle damage.</p>
+          <h1 className="text-lg md:text-2xl font-bold text-slate-800 mb-1">File a Claim</h1>
+          <p className="text-slate-500 text-xs md:text-sm">Capture or upload evidence of vehicle damage.</p>
         </div>
 
-        <div className="flex items-center gap-4 text-xs text-slate-400 font-mono">
-          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{new Date().toLocaleString('en-IN')}</span>
-          <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{locationEnabled ? 'GPS enabled' : 'Location off'}</span>
+        {/* Meta info */}
+        <div className="flex items-center gap-3 text-xs text-slate-400 font-mono">
+          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+          <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />{locationEnabled ? 'GPS on' : 'Location off'}</span>
         </div>
 
-        <div className="rounded-3xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.9)', border: '1.5px solid #BFDBFE', boxShadow: '0 4px 24px rgba(59,130,246,0.08)' }}>
+        {/* Evidence capture card */}
+        <div className="rounded-2xl md:rounded-3xl overflow-hidden"
+          style={{ background: 'rgba(255,255,255,0.9)', border: '1.5px solid #BFDBFE', boxShadow: '0 4px 24px rgba(59,130,246,0.08)' }}>
           <AnimatePresence mode="wait">
 
             {/* IDLE */}
             {mode === 'idle' && (
-              <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-8">
-                <div className="text-center mb-8">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="p-5 md:p-8">
+                <div className="text-center mb-5 md:mb-8">
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4"
                     style={{ background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)', border: '1px solid #BFDBFE' }}>
-                    <ImageIcon className="w-8 h-8 text-blue-400" />
+                    <ImageIcon className="w-6 h-6 md:w-8 md:h-8 text-blue-400" />
                   </div>
-                  <p className="text-slate-700 font-semibold">Add damage evidence</p>
+                  <p className="text-slate-700 font-semibold text-sm">Add damage evidence</p>
                   <p className="text-xs text-slate-400 mt-1">Upload up to 6 photos — clear photos improve AI accuracy</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button type="button" onClick={handleStartCamera}
-                    className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-[1.02]"
+                    className="flex items-center gap-3 p-3.5 md:p-4 rounded-2xl transition-all active:scale-95 hover:scale-[1.02]"
                     style={{ background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)', border: '1px solid #BFDBFE' }}>
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md"
                       style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)' }}>
@@ -257,7 +241,7 @@ export default function ClaimCapturePage() {
                     </div>
                   </button>
                   <button type="button" onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-3 p-4 rounded-2xl transition-all hover:scale-[1.02]"
+                    className="flex items-center gap-3 p-3.5 md:p-4 rounded-2xl transition-all active:scale-95 hover:scale-[1.02]"
                     style={{ background: 'linear-gradient(135deg, #F0FDF4, #DCFCE7)', border: '1px solid #BBF7D0' }}>
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md"
                       style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }}>
@@ -272,17 +256,20 @@ export default function ClaimCapturePage() {
               </motion.div>
             )}
 
-            {/* CAMERA */}
+            {/* CAMERA — full width, taller on mobile */}
             {mode === 'camera' && (
               <motion.div key="camera" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative">
-                <video ref={videoRef} autoPlay muted playsInline className="w-full aspect-video object-cover" style={{ background: '#0F172A' }} />
+                <video ref={videoRef} autoPlay muted playsInline
+                  className="w-full object-cover"
+                  style={{ background: '#0F172A', aspectRatio: '4/3', maxHeight: '60vh' }} />
                 {isRecording && (
-                  <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'rgba(239,68,68,0.92)' }}>
+                  <div className="absolute top-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-full"
+                    style={{ background: 'rgba(239,68,68,0.92)' }}>
                     <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
                     <span className="text-xs font-bold text-white font-mono">REC {formatTime(recordingSeconds)}</span>
                   </div>
                 )}
-                <div className="absolute bottom-4 inset-x-4 flex items-center justify-center gap-3">
+                <div className="absolute bottom-3 inset-x-3 flex items-center justify-center gap-2">
                   <Button variant="secondary" size="sm" onClick={() => { stopCamera(); setMode('idle') }} icon={<X className="w-4 h-4" />}>Cancel</Button>
                   {!isRecording && (
                     <Button variant="primary" size="md" onClick={handleCapturePhoto} icon={<Camera className="w-4 h-4" />}>Capture</Button>
@@ -298,11 +285,11 @@ export default function ClaimCapturePage() {
             {/* PHOTO PREVIEW */}
             {mode === 'photo-preview' && capturedImage && (
               <motion.div key="photo-preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative">
-                <img src={capturedImage} alt="Preview" className="w-full aspect-video object-cover" />
-                <div className="absolute inset-0 flex flex-col items-center justify-end pb-6 gap-3">
-                  <p className="text-white text-sm font-semibold px-4 py-1.5 rounded-full" style={{ background: 'rgba(0,0,0,0.5)' }}>
-                    Photo captured — looks good?
-                  </p>
+                <img src={capturedImage} alt="Preview" className="w-full object-cover"
+                  style={{ maxHeight: '60vh', aspectRatio: '4/3' }} />
+                <div className="absolute inset-0 flex flex-col items-center justify-end pb-5 gap-3">
+                  <p className="text-white text-sm font-semibold px-4 py-1.5 rounded-full"
+                    style={{ background: 'rgba(0,0,0,0.5)' }}>Photo captured — looks good?</p>
                   <div className="flex gap-3">
                     <button type="button" onClick={handleRetakePhoto}
                       className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
@@ -319,19 +306,14 @@ export default function ClaimCapturePage() {
               </motion.div>
             )}
 
-            {/* VIDEO PREVIEW — accept/retake screen */}
+            {/* VIDEO PREVIEW */}
             {mode === 'video-preview' && previewVideo && (
               <motion.div key="video-preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative">
-                <div className="relative w-full aspect-video bg-slate-900">
-                  {/* ✅ ACTUAL VIDEO PLAYBACK */}
-                  <video
-                    src={`data:video/webm;base64,${previewVideo.base64}`}
-                    className="w-full h-full object-contain"
-                    controls
-                    autoPlay
-                    playsInline
-                  />
-                  <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full pointer-events-none" style={{ background: 'rgba(0,0,0,0.7)' }}>
+                <div className="relative w-full bg-slate-900" style={{ aspectRatio: '4/3' }}>
+                  <video src={`data:video/webm;base64,${previewVideo.base64}`}
+                    className="w-full h-full object-contain" controls autoPlay playsInline />
+                  <div className="absolute top-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-full pointer-events-none"
+                    style={{ background: 'rgba(0,0,0,0.7)' }}>
                     <span className="w-2 h-2 rounded-full bg-red-500" />
                     <span className="text-xs font-bold text-white font-mono">{formatTime(previewVideo.duration)}</span>
                   </div>
@@ -356,7 +338,7 @@ export default function ClaimCapturePage() {
 
             {/* PREVIEW GRID */}
             {mode === 'preview' && (
-              <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
+              <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-3 md:p-4">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm font-bold text-slate-700">
                     {allImages.length > 0 && `${allImages.length} photo${allImages.length !== 1 ? 's' : ''}`}
@@ -366,49 +348,41 @@ export default function ClaimCapturePage() {
                   <div className="flex gap-2">
                     {allImages.length < 6 && (
                       <button type="button" onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold"
                         style={{ background: 'linear-gradient(135deg, #F0FDF4, #DCFCE7)', border: '1px solid #BBF7D0', color: '#059669' }}>
-                        <Plus className="w-3.5 h-3.5" /> Add Photos
+                        <Plus className="w-3.5 h-3.5" /> Add
                       </button>
                     )}
                     <button type="button" onClick={handleClear}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold"
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold"
                       style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626' }}>
-                      <X className="w-3.5 h-3.5" /> Clear All
+                      <X className="w-3.5 h-3.5" /> Clear
                     </button>
                   </div>
                 </div>
 
-                {/* Photos Grid */}
                 {allImages.length > 0 && (
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     {allImages.map((img, i) => (
-                      <div key={i}
-                        className="relative aspect-square rounded-xl overflow-hidden group cursor-pointer"
+                      <div key={i} className="relative aspect-square rounded-xl overflow-hidden group cursor-pointer"
                         style={{ border: '1.5px solid #BFDBFE' }}
                         onClick={() => setLightbox({ type: 'image', src: img })}>
                         <img src={img} alt={`Evidence ${i + 1}`} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          style={{ background: 'rgba(0,0,0,0.3)' }}>
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.9)' }}>
-                            <ImageIcon className="w-4 h-4 text-slate-700" />
-                          </div>
-                        </div>
                         <button type="button"
                           onClick={(e) => { e.stopPropagation(); handleRemoveImage(i) }}
-                          className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
                           style={{ background: 'rgba(0,0,0,0.6)' }}>
                           <X className="w-3 h-3 text-white" />
                         </button>
                         {i === 0 && (
-                          <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-xs font-bold"
+                          <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold"
                             style={{ background: 'rgba(37,99,235,0.85)', color: 'white' }}>Primary</div>
                         )}
                       </div>
                     ))}
                     {allImages.length < 6 && (
                       <button type="button" onClick={() => fileInputRef.current?.click()}
-                        className="aspect-square rounded-xl flex flex-col items-center justify-center transition-all hover:scale-[1.02]"
+                        className="aspect-square rounded-xl flex flex-col items-center justify-center"
                         style={{ border: '2px dashed #BFDBFE', background: '#F0F7FF', color: '#93C5FD' }}>
                         <Plus className="w-6 h-6 mb-1" />
                         <span className="text-xs font-semibold">Add</span>
@@ -417,26 +391,18 @@ export default function ClaimCapturePage() {
                   </div>
                 )}
 
-                {/* Videos List */}
                 {recordedVideos.length > 0 && (
                   <div className="space-y-2 mb-3">
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Recorded Videos</p>
                     {recordedVideos.map((vid, i) => (
-                      // ✅ FIX 1: onClick ab base64 pass karta hai, thumbnail nahi
                       <div key={i}
                         className="flex items-center gap-3 p-3 rounded-xl group cursor-pointer transition-colors hover:bg-blue-50"
                         style={{ background: '#F8FAFF', border: '1px solid #DBEAFE' }}
                         onClick={() => setLightbox({ type: 'video', src: vid.base64, duration: vid.duration })}>
-                        <div className="w-16 h-12 rounded-lg overflow-hidden flex-shrink-0 relative"
+                        <div className="w-14 h-10 md:w-16 md:h-12 rounded-lg overflow-hidden flex-shrink-0 relative"
                           style={{ background: '#0F172A', border: '1px solid #BFDBFE' }}>
-                          {/* ✅ FIX 1: Actual <video> tag for thumbnail frame */}
-                          <video
-                            src={`data:video/webm;base64,${vid.base64}`}
-                            className="w-full h-full object-cover"
-                            muted
-                            playsInline
-                            onLoadedMetadata={(e) => { (e.target as HTMLVideoElement).currentTime = 0.5 }}
-                          />
+                          <video src={`data:video/webm;base64,${vid.base64}`} className="w-full h-full object-cover" muted playsInline
+                            onLoadedMetadata={(e) => { (e.target as HTMLVideoElement).currentTime = 0.5 }} />
                           <div className="absolute inset-0 flex items-center justify-center">
                             <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
                               <Video className="w-3 h-3 text-white" />
@@ -445,11 +411,11 @@ export default function ClaimCapturePage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-slate-700">Video {i + 1}</p>
-                          <p className="text-xs text-slate-400 font-mono">{formatTime(vid.duration)} recorded</p>
+                          <p className="text-xs text-slate-400 font-mono">{formatTime(vid.duration)}</p>
                         </div>
                         <button type="button"
                           onClick={(e) => { e.stopPropagation(); handleRemoveVideo(i) }}
-                          className="w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                          className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
                           style={{ background: '#FEE2E2', color: '#DC2626' }}>
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -459,7 +425,7 @@ export default function ClaimCapturePage() {
                 )}
 
                 <button type="button" onClick={handleStartCamera}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold transition-all hover:scale-[1.01]"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-95"
                   style={{ background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)', border: '1px solid #BFDBFE', color: '#2563EB' }}>
                   <Camera className="w-3.5 h-3.5" /> Add from Camera
                 </button>
@@ -472,7 +438,7 @@ export default function ClaimCapturePage() {
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={handleFileUpload} />
 
         {/* Warning */}
-        <div className="flex items-start gap-3 p-4 rounded-2xl" style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
+        <div className="flex items-start gap-3 p-3 md:p-4 rounded-2xl" style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
           <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-amber-700 leading-relaxed">
             All images verified for AI generation and tampering. Submitting fake images is insurance fraud.
@@ -480,18 +446,16 @@ export default function ClaimCapturePage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div className="rounded-3xl p-6" style={{ background: 'rgba(255,255,255,0.9)', border: '1.5px solid #BFDBFE', boxShadow: '0 4px 20px rgba(59,130,246,0.06)' }}>
-            <h2 className="font-bold text-slate-700 text-sm uppercase tracking-wide mb-4">Claim Details</h2>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-5">
+          <div className="rounded-2xl md:rounded-3xl p-4 md:p-6"
+            style={{ background: 'rgba(255,255,255,0.9)', border: '1.5px solid #BFDBFE', boxShadow: '0 4px 20px rgba(59,130,246,0.06)' }}>
+            <h2 className="font-bold text-slate-700 text-xs md:text-sm uppercase tracking-wide mb-3 md:mb-4">Claim Details</h2>
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Damage Description</label>
               <div className="relative">
                 <textarea {...register('description')} rows={4} placeholder="Describe the incident and damage in detail..."
                   className="input-field resize-none w-full pr-12" />
-                <button
-                  type="button"
-                  onClick={toggleListening}
-                  title={isListening ? 'Stop recording' : 'Start voice input'}
+                <button type="button" onClick={toggleListening}
                   className="absolute bottom-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all"
                   style={{
                     background: isListening ? '#EF4444' : 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
@@ -503,19 +467,22 @@ export default function ClaimCapturePage() {
               {isListening && <p className="text-xs text-blue-500 font-medium animate-pulse">🎤 Listening... bolte jaao</p>}
               {errors.description && <p className="text-xs text-red-500">{errors.description.message}</p>}
             </div>
-            <div className="flex items-center justify-between p-3 rounded-xl mt-4"
+
+            {/* Location toggle */}
+            <div className="flex items-center justify-between p-3 rounded-xl mt-3 md:mt-4"
               style={{ background: 'linear-gradient(135deg, #F0F7FF, #F0FDF4)', border: '1px solid #BFDBFE' }}>
               <div>
                 <p className="text-sm font-semibold text-slate-700">Enable GPS Location</p>
-                <p className="text-xs text-slate-400">Attach incident location to claim</p>
+                <p className="text-xs text-slate-400">Attach incident location</p>
               </div>
               <button type="button" onClick={() => setLocationEnabled((v) => !v)}
-                className="w-11 h-6 rounded-full transition-all duration-300 relative"
+                className="w-11 h-6 rounded-full transition-all duration-300 relative flex-shrink-0"
                 style={{ background: locationEnabled ? 'linear-gradient(135deg, #2563EB, #10B981)' : '#E2E8F0' }}>
                 <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${locationEnabled ? 'left-[22px]' : 'left-0.5'}`} />
               </button>
             </div>
           </div>
+
           <Button type="submit" variant="primary" size="lg" loading={isSubmitting} className="w-full"
             icon={<ChevronRight className="w-4 h-4" />} iconPosition="right">
             Submit Claim
@@ -526,51 +493,30 @@ export default function ClaimCapturePage() {
       {/* Lightbox */}
       <AnimatePresence>
         {lightbox && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4"
             style={{ background: 'rgba(0,0,0,0.88)' }}
             onClick={() => setLightbox(null)}>
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }} transition={{ duration: 0.2 }}
               className="relative max-w-2xl w-full rounded-2xl overflow-hidden shadow-2xl"
               onClick={e => e.stopPropagation()}>
-
               {lightbox.type === 'image' ? (
                 <img src={lightbox.src} alt="Full view" className="w-full object-contain max-h-[80vh]" style={{ background: '#0F172A' }} />
               ) : (
-                // ✅ FIX 2: Actual video player in lightbox
                 <div className="relative w-full aspect-video bg-slate-900">
-                  <video
-                    src={`data:video/webm;base64,${lightbox.src}`}
-                    className="w-full h-full object-contain"
-                    controls
-                    autoPlay
-                    playsInline
-                  />
-                  {lightbox.duration !== undefined && (
-                    <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full pointer-events-none" style={{ background: 'rgba(0,0,0,0.7)' }}>
-                      <span className="w-2 h-2 rounded-full bg-red-500" />
-                      <span className="text-xs font-bold text-white font-mono">{formatTime(lightbox.duration)}</span>
-                    </div>
-                  )}
+                  <video src={`data:video/webm;base64,${lightbox.src}`} className="w-full h-full object-contain" controls autoPlay playsInline />
                 </div>
               )}
-
               <button onClick={() => setLightbox(null)}
-                className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-white/20"
+                className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center"
                 style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)' }}>
                 <X className="w-4 h-4 text-white" />
               </button>
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs text-white/50">
-                Tap outside to close
-              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
     </AppLayout>
   )
 }

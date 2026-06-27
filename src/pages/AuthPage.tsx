@@ -93,29 +93,29 @@ export default function AuthPage() {
     }}>
       {/* Decorative blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-20"
+        <div className="absolute top-0 right-0 w-60 h-60 sm:w-96 sm:h-96 rounded-full opacity-20"
           style={{ background: 'radial-gradient(circle, #3B82F6, transparent)' }} />
-        <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-15"
+        <div className="absolute bottom-0 left-0 w-44 h-44 sm:w-72 sm:h-72 rounded-full opacity-15"
           style={{ background: 'radial-gradient(circle, #10B981, transparent)' }} />
       </div>
 
       {/* Header */}
-      <header className="relative z-10 p-6">
+      <header className="relative z-10 p-4 sm:p-6">
         <Link to="/" className="inline-flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg"
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
             style={{ background: 'linear-gradient(135deg, #2563EB, #10B981)' }}>
-            <Shield className="w-5 h-5 text-white" />
+            <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
-          <span className="font-bold text-lg text-slate-800">
+          <span className="font-bold text-base sm:text-lg text-slate-800">
             Claim<span className="gradient-text">Titans</span>
           </span>
         </Link>
       </header>
 
       {/* Main */}
-      <main className="relative z-10 flex-1 flex items-center justify-center px-6 py-12">
+      <main className="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
         <div className="w-full max-w-md">
-          <div className="rounded-3xl p-8" style={{
+          <div className="rounded-2xl sm:rounded-3xl p-5 sm:p-8" style={{
             background: 'rgba(255,255,255,0.9)',
             border: '1px solid rgba(191,219,254,0.6)',
             boxShadow: '0 20px 60px rgba(59,130,246,0.1), 0 4px 16px rgba(0,0,0,0.04)'
@@ -126,12 +126,12 @@ export default function AuthPage() {
                   initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}
                 >
-                  <div className="mb-8">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 shadow-md"
+                  <div className="mb-6 sm:mb-8">
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center mb-4 shadow-md"
                       style={{ background: 'linear-gradient(135deg, #2563EB, #10B981)' }}>
-                      <Shield className="w-6 h-6 text-white" />
+                      <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-800 mb-1">Welcome back</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-800 mb-1">Welcome back</h1>
                     <p className="text-slate-500 text-sm">Enter your vehicle number and phone to receive an OTP.</p>
                   </div>
 
@@ -153,7 +153,7 @@ export default function AuthPage() {
                     </Button>
                   </form>
 
-                  <p className="text-xs text-slate-400 text-center mt-6">
+                  <p className="text-xs text-slate-400 text-center mt-6 leading-relaxed">
                     By continuing, you agree to our{' '}
                     <span className="text-blue-500 cursor-pointer hover:underline">Terms of Service</span>.
                   </p>
@@ -164,17 +164,17 @@ export default function AuthPage() {
                   exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}
                 >
                   <button type="button" onClick={() => setStep(1)}
-                    className="flex items-center gap-2 text-slate-400 hover:text-blue-600 text-sm mb-8 transition-colors">
+                    className="flex items-center gap-2 text-slate-400 hover:text-blue-600 text-sm mb-6 sm:mb-8 transition-colors -ml-1 px-1 py-1">
                     <ArrowLeft className="w-4 h-4" /> Back
                   </button>
 
-                  <div className="mb-8">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 shadow-md"
+                  <div className="mb-6 sm:mb-8">
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center mb-4 shadow-md"
                       style={{ background: 'linear-gradient(135deg, #2563EB, #10B981)' }}>
-                      <KeyRound className="w-6 h-6 text-white" />
+                      <KeyRound className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-800 mb-1">Enter OTP</h1>
-                    <p className="text-slate-500 text-sm">
+                    <h1 className="text-xl sm:text-2xl font-bold text-slate-800 mb-1">Enter OTP</h1>
+                    <p className="text-slate-500 text-sm break-words">
                       Sent to <span className="font-mono font-semibold text-slate-700">+91 {credentials?.phone}</span>
                     </p>
                   </div>
@@ -185,7 +185,7 @@ export default function AuthPage() {
                       prefix={<Phone className="w-4 h-4 text-blue-400" />}
                       error={form2.formState.errors.otp?.message}
                       {...form2.register('otp')}
-                      className="font-mono text-lg tracking-[0.5em] text-center" autoFocus />
+                      className="font-mono text-base sm:text-lg tracking-[0.4em] sm:tracking-[0.5em] text-center" autoFocus />
                     <Button type="submit" variant="primary" size="lg" loading={isLoading} className="w-full">
                       Verify & Continue
                     </Button>
@@ -193,7 +193,7 @@ export default function AuthPage() {
 
                   <div className="text-center mt-6">
                     <button type="button" onClick={handleResend} disabled={resendTimer > 0}
-                      className="text-sm text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      className="text-sm text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1">
                       {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP'}
                     </button>
                   </div>

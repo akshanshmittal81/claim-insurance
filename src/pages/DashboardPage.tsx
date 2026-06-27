@@ -140,11 +140,11 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
 
         {/* Welcome message */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-lg font-bold text-slate-800">
+          <h1 className="text-base md:text-lg font-bold text-slate-800">
             {getGreeting()}, {user?.name?.split(' ')[0] ?? 'there'}! 👋
           </h1>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -155,35 +155,40 @@ export default function DashboardPage() {
         {/* Policy expiry warning */}
         {showExpiryWarning && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+            className="flex items-center gap-3 px-3 py-2.5 md:px-4 md:py-3 rounded-2xl"
             style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
             <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
             <p className="text-xs text-amber-700 font-semibold">
-              Your policy expires in <span className="font-bold">{daysUntilExpiry} days</span> — renew to stay covered.
+              Policy expires in <span className="font-bold">{daysUntilExpiry} days</span> — renew to stay covered.
             </p>
           </motion.div>
         )}
 
         {/* User Profile Card */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-3xl p-5"
+          className="rounded-2xl md:rounded-3xl p-4 md:p-5"
           style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE', boxShadow: '0 4px 24px rgba(59,130,246,0.06)' }}>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-lg"
+
+          {/* User info row */}
+          <div className="flex items-center gap-3 mb-3 md:mb-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-base md:text-lg"
               style={{ background: 'linear-gradient(135deg, #2563EB, #10B981)' }}>
               {user?.name?.[0] ?? 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-bold text-slate-800 text-base">{user?.name ?? 'User'}</div>
+              <div className="font-bold text-slate-800 text-sm md:text-base truncate">{user?.name ?? 'User'}</div>
               <div className="text-xs text-slate-500 mt-0.5">+91 {user?.phone}</div>
             </div>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0"
               style={{ background: '#E1F5EE', color: '#0F6E56', border: '1px solid #9FE1CB' }}>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               Active
             </span>
           </div>
+
           <div className="h-px mb-3" style={{ background: '#EFF6FF' }} />
+
+          {/* Stats grid — 2 cols on mobile, 4 on desktop via flex */}
           <div className="grid grid-cols-2 gap-0">
             {[
               { label: 'Vehicle', value: user?.vehicleNumber ?? '—', mono: true },
@@ -208,29 +213,30 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Stats */}
+        {/* Stats — 3 cols, compact on mobile */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-          className="grid grid-cols-3 gap-3">
+          className="grid grid-cols-3 gap-2 md:gap-3">
           {[
             { label: 'Total', value: total, color: '#0F172A' },
             { label: 'Completed', value: completed, color: '#1D9E75' },
             { label: 'In Progress', value: inProgress, color: '#378ADD' },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-2xl p-3 text-center"
+            <div key={stat.label} className="rounded-xl md:rounded-2xl p-2.5 md:p-3 text-center"
               style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE' }}>
-              <div className="text-xs text-slate-400 mb-1">{stat.label}</div>
-              <div className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
+              <div className="text-[10px] md:text-xs text-slate-400 mb-0.5 md:mb-1">{stat.label}</div>
+              <div className="text-xl md:text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
             </div>
           ))}
         </motion.div>
 
-        {/* Action Cards */}
-        <div className="grid grid-cols-2 gap-3">
-          <motion.button initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        {/* Action Cards — 2 cols, taller tap targets on mobile */}
+        <div className="grid grid-cols-2 gap-2.5 md:gap-3">
+          <motion.button
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             onClick={() => navigate('/claim/new')}
-            className="rounded-3xl p-5 text-left transition-all duration-300 hover:scale-[1.02]"
+            className="rounded-2xl md:rounded-3xl p-4 md:p-5 text-left transition-all duration-300 active:scale-95 hover:scale-[1.02]"
             style={{ background: 'rgba(255,255,255,0.9)', border: '1.5px solid #BFDBFE', boxShadow: '0 4px 20px rgba(59,130,246,0.08)' }}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center mb-2.5 md:mb-3"
               style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)' }}>
               <Plus className="w-4 h-4 text-white" />
             </div>
@@ -238,67 +244,70 @@ export default function DashboardPage() {
             <div className="text-xs text-slate-500 mt-0.5">Upload photos & submit</div>
           </motion.button>
 
-          <motion.button initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+          <motion.button
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
             onClick={() => navigate('/claims')}
-            className="rounded-3xl p-5 text-left transition-all duration-300 hover:scale-[1.02]"
+            className="rounded-2xl md:rounded-3xl p-4 md:p-5 text-left transition-all duration-300 active:scale-95 hover:scale-[1.02]"
             style={{ background: 'rgba(255,255,255,0.9)', border: '1.5px solid #BBF7D0', boxShadow: '0 4px 20px rgba(16,185,129,0.08)' }}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center mb-2.5 md:mb-3"
               style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }}>
               <ListChecks className="w-4 h-4 text-white" />
             </div>
             <div className="font-bold text-slate-800 text-sm">My Claims</div>
             <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
               <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin text-emerald-500' : ''}`} />
-              {refreshing ? 'Refreshing...' : 'View all submissions'}
+              {refreshing ? 'Refreshing...' : 'View all'}
             </div>
           </motion.button>
         </div>
 
         {/* Claims List */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2.5 md:mb-3">
             <h2 className="font-bold text-slate-800 flex items-center gap-2 text-sm">
               <FileText className="w-4 h-4 text-blue-500" /> Recent Claims
             </h2>
-            {claimList.length > 0 && <span className="text-xs text-slate-400 font-mono">{claimList.length} total</span>}
+            {claimList.length > 0 && (
+              <span className="text-xs text-slate-400 font-mono">{claimList.length} total</span>
+            )}
           </div>
 
           {loadingClaims ? (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {[1, 2, 3].map(i => <div key={i} className="rounded-2xl p-4 shimmer-bg h-16" />)}
             </div>
           ) : claimList.length === 0 ? (
-            <div className="rounded-3xl p-16 text-center"
+            <div className="rounded-2xl md:rounded-3xl p-10 md:p-16 text-center"
               style={{ background: 'rgba(255,255,255,0.7)', border: '2px dashed #BFDBFE' }}>
-              <FileText className="w-10 h-10 text-blue-200 mx-auto mb-3" />
-              <p className="text-slate-600 font-semibold">No claims yet</p>
-              <p className="text-xs text-slate-400 mt-1 mb-6">Submit your first claim to get started</p>
+              <FileText className="w-8 h-8 md:w-10 md:h-10 text-blue-200 mx-auto mb-3" />
+              <p className="text-slate-600 font-semibold text-sm">No claims yet</p>
+              <p className="text-xs text-slate-400 mt-1 mb-5">Submit your first claim to get started</p>
               <Button variant="primary" size="sm" icon={<Plus className="w-4 h-4" />}
                 onClick={() => navigate('/claim/new')}>New Claim</Button>
             </div>
           ) : (
-            <div className="rounded-3xl overflow-hidden"
+            <div className="rounded-2xl md:rounded-3xl overflow-hidden"
               style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE', boxShadow: '0 4px 24px rgba(59,130,246,0.06)' }}>
               {claimList.map((claim, i) => {
                 const badge = statusBadge(claim.status)
                 const isExpanded = expandedId === claim.id
                 return (
                   <div key={claim.id} style={{ borderBottom: i < claimList.length - 1 ? '1px solid #EFF6FF' : 'none' }}>
-                    <div className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-blue-50/40 transition-colors"
+                    <div className="flex items-center gap-3 px-3 md:px-4 py-3 cursor-pointer hover:bg-blue-50/40 active:bg-blue-50/60 transition-colors"
                       onClick={() => setExpandedId(isExpanded ? null : claim.id)}>
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                      <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                         style={{ background: claim.status === 'completed' ? '#E1F5EE' : claim.status === 'rejected' ? '#FCEBEB' : '#FAEEDA' }}>
                         {statusIcon(claim.status)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono text-sm font-bold text-slate-700">{claimIdToDisplay(claim.id)}</span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+                          <span className="font-mono text-xs md:text-sm font-bold text-slate-700">{claimIdToDisplay(claim.id)}</span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] md:text-xs font-semibold"
                             style={{ background: badge.bg, border: `1px solid ${badge.border}`, color: badge.color }}>
                             {claim.status.replace(/_/g, ' ')}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">{formatDate(claim.createdAt)}</p>
+                        <p className="text-[10px] md:text-xs text-slate-400 mt-0.5">{formatDate(claim.createdAt)}</p>
                       </div>
                       <motion.div animate={{ rotate: isExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}>
                         <ChevronRight className="w-4 h-4 text-slate-300" />
@@ -308,10 +317,10 @@ export default function DashboardPage() {
                       {isExpanded && (
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} style={{ overflow: 'hidden' }}>
-                          <div className="px-4 pb-4" style={{ borderTop: '1px solid #EFF6FF' }}>
+                          <div className="px-3 md:px-4 pb-4" style={{ borderTop: '1px solid #EFF6FF' }}>
                             <ClaimTracker claim={claim} />
                             <button onClick={(e) => { e.stopPropagation(); handleTrackClaim(claim) }}
-                              className="mt-3 w-full py-2 rounded-xl text-xs font-semibold transition-all hover:scale-[1.01]"
+                              className="mt-3 w-full py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] hover:scale-[1.01]"
                               style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)', color: 'white' }}>
                               View Full Details →
                             </button>

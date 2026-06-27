@@ -40,25 +40,25 @@ export default function ClaimProcessingPage() {
   return (
     <AppLayout>
       <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Claim' }, { label: 'Processing' }]} />
-      <div className="max-w-2xl mx-auto space-y-5">
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-5 px-1 sm:px-0">
 
         {/* Header card */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-3xl p-6" style={{
+          className="rounded-2xl sm:rounded-3xl p-4 sm:p-6" style={{
             background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
             border: '1.5px solid #93C5FD',
             boxShadow: '0 4px 24px rgba(59,130,246,0.1)'
           }}>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md"
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md"
               style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)' }}>
-              <Shield className="w-6 h-6 text-white" />
+              <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="font-bold text-slate-800">{claimId ? claimIdToDisplay(claimId) : 'Processing Claim'}</h1>
+                <h1 className="font-bold text-slate-800 text-sm sm:text-base truncate">{claimId ? claimIdToDisplay(claimId) : 'Processing Claim'}</h1>
                 {activeClaim?.vehicleNumber && (
-                  <span className="font-mono text-xs px-2 py-0.5 rounded-lg text-blue-700"
+                  <span className="font-mono text-xs px-2 py-0.5 rounded-lg text-blue-700 flex-shrink-0"
                     style={{ background: '#DBEAFE', border: '1px solid #BFDBFE' }}>
                     {activeClaim.vehicleNumber}
                   </span>
@@ -86,7 +86,7 @@ export default function ClaimProcessingPage() {
         {/* Notification Banner */}
         {notifPermission !== 'granted' && !isTerminal && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+            className="flex items-center gap-3 px-3 sm:px-4 py-3 rounded-2xl"
             style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
             <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ background: '#FEF3C7' }}>
@@ -111,7 +111,7 @@ export default function ClaimProcessingPage() {
             {notifPermission !== 'denied' && (
               <button
                 onClick={handleEnableNotifications}
-                className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:scale-[1.02]"
+                className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] sm:hover:scale-[1.02]"
                 style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)', color: 'white' }}>
                 Enable
               </button>
@@ -124,7 +124,7 @@ export default function ClaimProcessingPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-2xl"
             style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
-            <Bell className="w-3.5 h-3.5 text-emerald-500" />
+            <Bell className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
             <p className="text-xs font-semibold text-emerald-700">
               Notifications enabled — we'll alert you on every update
             </p>
@@ -132,7 +132,8 @@ export default function ClaimProcessingPage() {
         )}
 
         {/* Stepper */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+          className="overflow-x-auto -mx-1 px-1 sm:mx-0 sm:px-0">
           <ClaimStepper currentStatus={claimStatus} />
         </motion.div>
 
@@ -154,7 +155,7 @@ export default function ClaimProcessingPage() {
           )}
         </motion.div>
 
-        <p className="text-xs text-slate-400 text-center">
+        <p className="text-xs text-slate-400 text-center px-2">
           {notifPermission === 'granted'
             ? '🔔 Notifications on — you can safely close this tab'
             : 'Enable notifications to get updates when you close this tab'}

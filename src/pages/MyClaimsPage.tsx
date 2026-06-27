@@ -93,12 +93,8 @@ export default function MyClaimsPage() {
   const handleTrackClaim = (claim: Claim) => {
     const store = useAppStore.getState()
     store.setActiveClaim(claim)
-    if (claim.status !== 'completed' && claim.status !== 'rejected') {
-      store.setClaimResult(null)
-    }
-    if (typeof store.setClaimStatus === 'function') {
-      store.setClaimStatus(claim.status)
-    }
+    if (claim.status !== 'completed' && claim.status !== 'rejected') store.setClaimResult(null)
+    if (typeof store.setClaimStatus === 'function') store.setClaimStatus(claim.status)
     navigate(claim.status === 'completed' || claim.status === 'rejected'
       ? `/claim/${claim.id}/result` : `/claim/${claim.id}/processing`)
   }
@@ -118,7 +114,6 @@ export default function MyClaimsPage() {
   const activeCount = claimList.filter(c => c.status !== 'completed' && c.status !== 'rejected').length
   const completedCount = claimList.filter(c => c.status === 'completed' || c.status === 'rejected').length
 
-  // Filter + Search + Sort
   const filtered = claimList
     .filter(c => {
       if (filter === 'active') return c.status !== 'completed' && c.status !== 'rejected'
@@ -142,24 +137,25 @@ export default function MyClaimsPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
 
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-slate-800">My Claims</h1>
+            <h1 className="text-base md:text-xl font-bold text-slate-800">My Claims</h1>
             <p className="text-xs text-slate-500 mt-0.5">{claimList.length} total claims</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2">
             <button onClick={() => fetchClaims(true)}
               className="p-2 rounded-xl hover:bg-blue-50 transition-colors">
               <RefreshCw className={`w-4 h-4 text-slate-400 ${refreshing ? 'animate-spin text-blue-500' : ''}`} />
             </button>
             <button onClick={() => navigate('/claim/new')}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-white"
+              className="flex items-center gap-1.5 px-2.5 py-2 md:px-3 rounded-xl text-xs font-semibold text-white"
               style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)' }}>
-              <Plus className="w-3.5 h-3.5" /> New Claim
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">New Claim</span>
             </button>
           </div>
         </motion.div>
@@ -172,62 +168,63 @@ export default function MyClaimsPage() {
             <Search className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
             <input
               type="text"
-              placeholder="Search by claim ID or status..."
+              placeholder="Search claims..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="flex-1 text-xs bg-transparent outline-none text-slate-700 placeholder-slate-400"
+              className="flex-1 text-xs bg-transparent outline-none text-slate-700 placeholder-slate-400 min-w-0"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="text-slate-400 hover:text-slate-600 text-xs">✕</button>
+              <button onClick={() => setSearch('')} className="text-slate-400 hover:text-slate-600 text-xs flex-shrink-0">✕</button>
             )}
           </div>
           <button
             onClick={() => setSortOrder(s => s === 'newest' ? 'oldest' : 'newest')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+            className="flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0"
             style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE', color: '#64748B' }}>
             <ArrowUpDown className="w-3.5 h-3.5" />
-            {sortOrder === 'newest' ? 'Newest' : 'Oldest'}
+            <span className="hidden sm:inline">{sortOrder === 'newest' ? 'Newest' : 'Oldest'}</span>
           </button>
         </motion.div>
 
-        {/* Filter tabs */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-          className="flex gap-2">
-          {[
-            { key: 'all', label: `All (${claimList.length})` },
-            { key: 'active', label: `Active (${activeCount})` },
-            { key: 'completed', label: `Completed (${completedCount})` },
-          ].map(f => (
-            <button key={f.key} onClick={() => setFilter(f.key as any)}
-              className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all"
-              style={{
-                background: filter === f.key ? 'linear-gradient(135deg, #2563EB, #0EA5E9)' : 'rgba(255,255,255,0.9)',
-                color: filter === f.key ? 'white' : '#64748B',
-                border: filter === f.key ? 'none' : '1px solid #DBEAFE',
-              }}>
-              {f.label}
-            </button>
-          ))}
+        {/* Filter tabs — horizontally scrollable on mobile */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-none" style={{ scrollbarWidth: 'none' }}>
+            {[
+              { key: 'all', label: `All (${claimList.length})` },
+              { key: 'active', label: `Active (${activeCount})` },
+              { key: 'completed', label: `Done (${completedCount})` },
+            ].map(f => (
+              <button key={f.key} onClick={() => setFilter(f.key as any)}
+                className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all flex-shrink-0"
+                style={{
+                  background: filter === f.key ? 'linear-gradient(135deg, #2563EB, #0EA5E9)' : 'rgba(255,255,255,0.9)',
+                  color: filter === f.key ? 'white' : '#64748B',
+                  border: filter === f.key ? 'none' : '1px solid #DBEAFE',
+                }}>
+                {f.label}
+              </button>
+            ))}
+          </div>
         </motion.div>
 
-        {/* Search results info */}
+        {/* Search result info */}
         {search && (
           <p className="text-xs text-slate-400">
             {filtered.length} result{filtered.length !== 1 ? 's' : ''} for "<span className="text-slate-600 font-semibold">{search}</span>"
           </p>
         )}
 
-        {/* Claims */}
+        {/* Claims list */}
         {loading ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {[1, 2, 3].map(i => <div key={i} className="rounded-2xl p-4 shimmer-bg h-20" />)}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-3xl p-16 text-center"
+          <div className="rounded-2xl md:rounded-3xl p-10 md:p-16 text-center"
             style={{ background: 'rgba(255,255,255,0.7)', border: '2px dashed #BFDBFE' }}>
-            <FileText className="w-10 h-10 text-blue-200 mx-auto mb-3" />
-            <p className="text-slate-600 font-semibold">No claims found</p>
-            <p className="text-xs text-slate-400 mt-1 mb-6">
+            <FileText className="w-8 h-8 md:w-10 md:h-10 text-blue-200 mx-auto mb-3" />
+            <p className="text-slate-600 font-semibold text-sm">No claims found</p>
+            <p className="text-xs text-slate-400 mt-1 mb-5">
               {search ? `No results for "${search}"` : filter === 'all' ? 'Submit your first claim to get started' : `No ${filter} claims`}
             </p>
             {!search && (
@@ -237,7 +234,7 @@ export default function MyClaimsPage() {
           </div>
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
-            className="rounded-3xl overflow-hidden"
+            className="rounded-2xl md:rounded-3xl overflow-hidden"
             style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE', boxShadow: '0 4px 24px rgba(59,130,246,0.06)' }}>
             {filtered.map((claim, i) => {
               const badge = statusBadge(claim.status)
@@ -246,23 +243,23 @@ export default function MyClaimsPage() {
                 <div key={claim.id}
                   style={{ borderBottom: i < filtered.length - 1 ? '1px solid #EFF6FF' : 'none' }}>
 
-                  <div className="flex items-center gap-3 px-4 py-4 cursor-pointer hover:bg-blue-50/40 transition-colors"
+                  <div className="flex items-center gap-3 px-3 md:px-4 py-3 cursor-pointer hover:bg-blue-50/40 active:bg-blue-50/60 transition-colors"
                     onClick={() => setExpandedId(isExpanded ? null : claim.id)}>
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{ background: claim.status === 'completed' ? '#E1F5EE' : claim.status === 'rejected' ? '#FCEBEB' : '#FAEEDA' }}>
                       {statusIcon(claim.status)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-sm font-bold text-slate-700">
+                        <span className="font-mono text-xs md:text-sm font-bold text-slate-700">
                           {claimIdToDisplay(claim.id)}
                         </span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] md:text-xs font-semibold"
                           style={{ background: badge.bg, border: `1px solid ${badge.border}`, color: badge.color }}>
                           {claim.status.replace(/_/g, ' ')}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5">{formatDate(claim.createdAt)}</p>
+                      <p className="text-[10px] md:text-xs text-slate-400 mt-0.5">{formatDate(claim.createdAt)}</p>
                     </div>
                     <motion.div animate={{ rotate: isExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}>
                       <ChevronRight className="w-4 h-4 text-slate-300" />
@@ -273,10 +270,10 @@ export default function MyClaimsPage() {
                     {isExpanded && (
                       <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} style={{ overflow: 'hidden' }}>
-                        <div className="px-4 pb-4" style={{ borderTop: '1px solid #EFF6FF' }}>
+                        <div className="px-3 md:px-4 pb-4" style={{ borderTop: '1px solid #EFF6FF' }}>
                           <ClaimTracker claim={claim} />
                           <button onClick={(e) => { e.stopPropagation(); handleTrackClaim(claim) }}
-                            className="mt-3 w-full py-2 rounded-xl text-xs font-semibold transition-all hover:scale-[1.01]"
+                            className="mt-3 w-full py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] hover:scale-[1.01]"
                             style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)', color: 'white' }}>
                             View Full Details →
                           </button>

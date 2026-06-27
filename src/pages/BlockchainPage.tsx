@@ -37,22 +37,22 @@ export default function BlockchainPage() {
   return (
     <AppLayout>
       <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }, { label: id ? claimIdToDisplay(id) : 'Claim' }, { label: 'Blockchain' }]} />
-      <div className="max-w-2xl mx-auto space-y-4">
+      <div className="max-w-2xl mx-auto space-y-4 px-1 sm:px-0">
 
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-3xl p-6" style={{
+          className="rounded-2xl sm:rounded-3xl p-4 sm:p-6" style={{
             background: 'linear-gradient(135deg, #F5F3FF, #EDE9FE)',
             border: '1.5px solid #C4B5FD',
             boxShadow: '0 4px 24px rgba(124,58,237,0.1)'
           }}>
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center shadow-md"
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-md flex-shrink-0"
               style={{ background: 'linear-gradient(135deg, #7C3AED, #8B5CF6)' }}>
               <GitBranch className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h1 className="font-bold text-slate-800">Blockchain Record</h1>
+            <div className="min-w-0">
+              <h1 className="font-bold text-slate-800 text-sm sm:text-base">Blockchain Record</h1>
               <p className="text-xs text-slate-500">Immutable, tamper-proof claim audit trail</p>
             </div>
           </div>
@@ -60,16 +60,16 @@ export default function BlockchainPage() {
 
         {/* Record */}
         {loading ? (
-          <div className="rounded-3xl p-6 space-y-4 shimmer-bg h-64" />
+          <div className="rounded-2xl sm:rounded-3xl p-6 space-y-4 shimmer-bg h-64" />
         ) : record ? (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="rounded-3xl p-6 space-y-5" style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE', boxShadow: '0 4px 24px rgba(59,130,246,0.06)' }}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-5" style={{ background: 'rgba(255,255,255,0.9)', border: '1px solid #DBEAFE', boxShadow: '0 4px 24px rgba(59,130,246,0.06)' }}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 {statusIcon}
-                <span className="font-bold text-slate-700">Transaction Status</span>
+                <span className="font-bold text-slate-700 text-sm sm:text-base truncate">Transaction Status</span>
               </div>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold flex-shrink-0"
                 style={{
                   background: record.status === 'confirmed' ? '#D1FAE5' : record.status === 'failed' ? '#FEE2E2' : '#FEF3C7',
                   color: record.status === 'confirmed' ? '#065F46' : record.status === 'failed' ? '#991B1B' : '#92400E',
@@ -87,7 +87,7 @@ export default function BlockchainPage() {
               { label: 'Network', value: record.network },
               { label: 'Timestamp', value: formatDate(record.timestamp) },
             ].map(({ label, value, display, copyable }) => (
-              <div key={label} className="flex items-center justify-between gap-4">
+              <div key={label} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wide flex-shrink-0">{label}</span>
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-sm font-mono text-slate-700 truncate">{display ?? value}</span>
@@ -104,14 +104,14 @@ export default function BlockchainPage() {
             <div className="h-px" style={{ background: '#EFF6FF' }} />
 
             {record.txHash && <a href={record.explorerUrl} target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm transition-all hover:scale-[1.02]"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-bold text-sm transition-all active:scale-[0.98] sm:hover:scale-[1.02]"
               style={{ background: 'linear-gradient(135deg, #7C3AED, #8B5CF6)', color: 'white', boxShadow: '0 4px 16px rgba(124,58,237,0.25)' }}>
               <ExternalLink className="w-4 h-4" />
               View on Block Explorer
             </a>}
           </motion.div>
         ) : (
-          <div className="rounded-3xl p-16 text-center" style={{ background: 'rgba(255,255,255,0.7)', border: '2px dashed #BFDBFE' }}>
+          <div className="rounded-2xl sm:rounded-3xl p-10 sm:p-16 text-center" style={{ background: 'rgba(255,255,255,0.7)', border: '2px dashed #BFDBFE' }}>
             <GitBranch className="w-10 h-10 text-blue-200 mx-auto mb-3" />
             <p className="text-slate-600 font-semibold">Record not available yet</p>
             <p className="text-xs text-slate-400 mt-1 mb-6">Blockchain confirmation may take a few minutes</p>
