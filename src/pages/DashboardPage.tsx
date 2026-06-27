@@ -9,6 +9,7 @@ import { claimApi, authApi } from '@/services/api'
 import { formatDate, claimIdToDisplay } from '@/utils'
 import type { Claim } from '@/types'
 import toast from 'react-hot-toast'
+import HealthDashboard from '@/components/ui/HealthDashboard'
 
 const STEPS = [
   { key: 'uploaded',    label: 'Submitted' },
@@ -67,7 +68,6 @@ function ClaimTracker({ claim }: { claim: Claim }) {
   )
 }
 
-// ✅ greeting function
 function getGreeting() {
   const hour = new Date().getHours()
   if (hour < 12) return 'Good morning'
@@ -110,7 +110,6 @@ export default function DashboardPage() {
     init()
   }, [])
 
-  // ✅ policy expiry check
   const daysUntilExpiry = user?.policyExpiry
     ? Math.ceil((new Date(user.policyExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null
@@ -143,7 +142,7 @@ export default function DashboardPage() {
     <AppLayout>
       <div className="space-y-4">
 
-        {/* ✅ Welcome message */}
+        {/* Welcome message */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-lg font-bold text-slate-800">
             {getGreeting()}, {user?.name?.split(' ')[0] ?? 'there'}! 👋
@@ -153,7 +152,7 @@ export default function DashboardPage() {
           </p>
         </motion.div>
 
-        {/* ✅ Policy expiry warning */}
+        {/* Policy expiry warning */}
         {showExpiryWarning && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-3 px-4 py-3 rounded-2xl"
@@ -225,13 +224,17 @@ export default function DashboardPage() {
           ))}
         </motion.div>
 
+        {/* ✅ System Health Dashboard — Self Diagnosis Feature */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+          <HealthDashboard />
+        </motion.div>
+
         {/* Action Cards */}
         <div className="grid grid-cols-2 gap-3">
           <motion.button initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             onClick={() => navigate('/claim/new')}
             className="rounded-3xl p-5 text-left transition-all duration-300 hover:scale-[1.02]"
             style={{ background: 'rgba(255,255,255,0.9)', border: '1.5px solid #BFDBFE', boxShadow: '0 4px 20px rgba(59,130,246,0.08)' }}>
-            {/* ✅ icon fix — missing # added */}
             <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
               style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)' }}>
               <Plus className="w-4 h-4 text-white" />
