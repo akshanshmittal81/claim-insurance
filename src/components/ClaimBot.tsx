@@ -61,7 +61,7 @@ export default function ClaimBot() {
 
     try {
       const baseUrl = import.meta.env.VITE_API_BASE_URL
-const response = await fetch(`${baseUrl}/claimbot`, {
+const response = await fetch('https://aniket3007.app.n8n.cloud/webhook/claimbot', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
