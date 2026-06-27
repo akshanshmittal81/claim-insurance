@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Camera, Upload, Video, VideoOff, Image as ImageIcon, X, MapPin, Clock, ChevronRight, AlertCircle, Plus, Check } from 'lucide-react'
 import { AppLayout, Breadcrumb } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/Button'
 import { useCamera } from '@/hooks/useCamera'
@@ -12,6 +11,7 @@ import { useAppStore } from '@/store'
 import { claimApi } from '@/services/api'
 import { fileToBase64, getLocationString } from '@/utils'
 import toast from 'react-hot-toast'
+import { Camera, Upload, Video, VideoOff, Image as ImageIcon, X, MapPin, Clock, ChevronRight, AlertCircle, Plus, Check, Mic, MicOff } from 'lucide-react'
 
 const schema = z.object({
   description: z.string().min(10, 'Please provide at least 10 characters').max(500),
@@ -32,8 +32,54 @@ export default function ClaimCapturePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [locationEnabled, setLocationEnabled] = useState(false)
   const [recordingSeconds, setRecordingSeconds] = useState(0)
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef<any>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const descriptionValue = watch('description') || ''
+
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) return
+
+    const recognition = new SpeechRecognition()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'en-IN'
+
+    recognition.onresult = (event: any) => {
+      let finalTranscript = ''
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript
+      }
+      if (finalTranscript) {
+        const current = watch('description') || ''
+        setValue('description', current ? current + ' ' + finalTranscript : finalTranscript, { shouldValidate: true })
+      }
+    }
+
+    recognition.onerror = () => setIsListening(false)
+    recognition.onend = () => setIsListening(false)
+
+    recognitionRef.current = recognition
+    return () => recognition.stop()
+  }, [setValue, watch])
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      toast.error('Voice input not supported in this browser. Try Chrome.')
+      return
+    }
+    if (isListening) {
+      recognitionRef.current.stop()
+      setIsListening(false)
+    } else {
+      recognitionRef.current.start()
+      setIsListening(true)
+      toast('Listening...', { icon: '🎤' })
+    }
+  }
+  
 
   const allImages = [...(capturedImage ? [capturedImage] : []), ...uploadedImages]
   const hasEvidence = allImages.length > 0 || recordedVideos.length > 0
@@ -439,8 +485,22 @@ export default function ClaimCapturePage() {
             <h2 className="font-bold text-slate-700 text-sm uppercase tracking-wide mb-4">Claim Details</h2>
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">Damage Description</label>
-              <textarea {...register('description')} rows={4} placeholder="Describe the incident and damage in detail..."
-                className="input-field resize-none w-full" />
+              <div className="relative">
+                <textarea {...register('description')} rows={4} placeholder="Describe the incident and damage in detail..."
+                  className="input-field resize-none w-full pr-12" />
+                <button
+                  type="button"
+                  onClick={toggleListening}
+                  title={isListening ? 'Stop recording' : 'Start voice input'}
+                  className="absolute bottom-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all"
+                  style={{
+                    background: isListening ? '#EF4444' : 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
+                    border: isListening ? 'none' : '1px solid #BFDBFE',
+                  }}>
+                  {isListening ? <MicOff className="w-4 h-4 text-white" /> : <Mic className="w-4 h-4 text-blue-500" />}
+                </button>
+              </div>
+              {isListening && <p className="text-xs text-blue-500 font-medium animate-pulse">🎤 Listening... bolte jaao</p>}
               {errors.description && <p className="text-xs text-red-500">{errors.description.message}</p>}
             </div>
             <div className="flex items-center justify-between p-3 rounded-xl mt-4"
