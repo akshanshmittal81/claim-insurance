@@ -10,6 +10,7 @@ import ClaimProcessingPage from '@/pages/ClaimProcessingPage'
 import ClaimResultPage from '@/pages/ClaimResultPage'
 import BlockchainPage from '@/pages/BlockchainPage'
 import MyClaimsPage from '@/pages/MyClaimsPage'
+import AdminPage from '@/pages/AdminPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import ClaimBot from '@/components/ClaimBot'
 
@@ -67,6 +68,16 @@ export default function App() {
           element={
             <ProtectedRoute>
               <BlockchainPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Admin */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminPage />
             </ProtectedRoute>
           }
         />
