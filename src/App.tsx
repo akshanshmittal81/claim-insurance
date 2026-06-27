@@ -11,6 +11,7 @@ import ClaimResultPage from '@/pages/ClaimResultPage'
 import BlockchainPage from '@/pages/BlockchainPage'
 import MyClaimsPage from '@/pages/MyClaimsPage'
 import NotFoundPage from '@/pages/NotFoundPage'
+import ClaimBot from '@/components/ClaimBot'
 
 export default function App() {
   return (
@@ -73,6 +74,7 @@ export default function App() {
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      <ClaimBot />
     </BrowserRouter>
   )
 }
